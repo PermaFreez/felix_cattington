@@ -9,7 +9,7 @@ logging.disable(logging.CRITICAL)
 
 phasher = PHash()
 
-with open('stuff.txt', 'w') as f:
+with open(os.devnull, 'w') as f:
     with contextlib.redirect_stderr(f):
         # Generate encodings for all images in an image directory
         encodings = phasher.encode_images(image_dir='./memes/')

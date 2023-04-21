@@ -16,6 +16,7 @@ impl EventHandler for InformerHandler {
     async fn message(&self, ctx: Context, msg: Message) {
         dotenv().ok();
 
+        // Megnézi a mém csatornába érkezett-e az üzenet.
         if msg.channel_id.to_string() != env::var("MEME_CHANNEL").expect("Couldn't find environment variable!") {
             return;
         }
@@ -37,29 +38,27 @@ impl EventHandler for InformerHandler {
         
         let conn = Connection::open("database.db").unwrap();
         for attachment in &msg.attachments {
+            // Megnézi videó, vagy kép-e a csatolmány (mert hang nyilván nem lehet mém)
             let att_type = &attachment.content_type.to_owned().unwrap();
             if att_type.matches("image").count() == 0 && att_type.matches("video").count() == 0 { 
                 continue;
             }
 
-            // This appends a -n to the end of the meme, in order to make it distinct of other files sharing the same name
+            // Hozzáad egy -n-t a fájlnévhez, hogy ugyanazzal a fájlnévvel több mémet is lehessen kezelni.
             let filename = &attachment.filename;
             let mut suffix: u32 = 0;
 
             let filename_parts: Vec<&str> = filename.split('.').collect::<Vec<&str>>();
 
-            let mut filename_first = String::from(filename_parts[0]);
+            let mut filename_last = String::new();
 
-            for i in 1..filename_parts.len() - 1 {
-                if i == filename_parts.len() - 1 {
-                    break;
-                }
-                filename_first = filename_first + "d" + &filename_parts[i];
+            for i in 1..filename_parts.len() {
+                filename_last = filename_last + "." + filename_parts[i];
             }
 
             let mut file = String::new();
             loop {
-                file = format!("{}-{}.{}", filename_first.as_str(), &suffix.to_string().as_str(), &filename_parts.last().unwrap());
+                file = format!("{}-{}{}", &filename_parts[0], &suffix.to_string().as_str(), &filename_last);
                 let path: String = String::from("memes/") + &file;
                 if !path::Path::new(&path).exists() {
                     fs::write(&path, &attachment.download().await.unwrap()).expect("Couldn't write to file!");
