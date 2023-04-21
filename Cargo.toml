@@ -1,0 +1,15 @@
+[package]
+name = "memer_rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serenity = { default-features = false, features = ["client", "gateway", "model", "rustls_backend"], git = "https://github.com/serenity-rs/serenity.git", branch = "next"}
+tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
+dotenv = "0.15.0"
+#sqlite = "0.30.4"
+rusqlite = "0.29.0"
+cpython = "0.7.1"
+serde_json = "1.0.96"
