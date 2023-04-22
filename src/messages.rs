@@ -83,7 +83,7 @@ impl EventHandler for InformerHandler {
                 }
             }
 
-            let query = "INSERT INTO memes (FileName, Link, Tags) VALUES (?1, ?2, ?3);";
+            let query = "INSERT INTO memes (FileName, Id, Tags) VALUES (?1, ?2, ?3);";
             let mut query2 = "INSERT INTO users (UserId, Memes) VALUES (?1, ?2);";
 
             let query3 = "SELECT Memes FROM users WHERE UserId = ?1";
@@ -99,7 +99,7 @@ impl EventHandler for InformerHandler {
             memes_vec.push(&file);
             memes_json = serde_json::to_string(&memes_vec).unwrap();
 
-            conn.execute(&query, (&file, &msg.link(), String::new())).unwrap();
+            conn.execute(&query, (&file, &msg.id.to_string(), String::new())).unwrap();
             conn.execute(&query2, (&msg.author.id.to_string(), &memes_json)).unwrap();
 
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. 
