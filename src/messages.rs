@@ -29,7 +29,6 @@ impl EventHandler for InformerHandler {
 
             dotenv().ok();
 
-            let title: &str = "Mém észlelve";
             let footer = CreateEmbedFooter::new(String::from("Készítette: ") + env::var("AUTHOR").expect("Couldn't find AUTHOR environment variable!").as_str())
                 .icon_url("https://cdn.discordapp.com/avatars/418109786622787604/fc8cd6348c2868bc7d3d15ddc0c94ff1.webp");
 
@@ -109,7 +108,7 @@ impl EventHandler for InformerHandler {
 
             let embed = CreateEmbed::new().color(color)
                 .thumbnail(&attachment.url)
-                .title(title)
+                .title("Mém észlelve")
                 .description(description)
                 .footer(footer.clone());
 
@@ -121,7 +120,7 @@ pub struct TaggingHandler;
 
 #[async_trait]
 impl EventHandler for TaggingHandler {
-    async fn message(&self, _ctx: Context, msg: Message) {
+    async fn message(&self, ctx: Context, msg: Message) {
         if msg.is_private() {
 
             let conn = Connection::open("database.db").unwrap();
@@ -130,30 +129,31 @@ impl EventHandler for TaggingHandler {
 
             let filename = message_split[0];
 
-            if !check_ownership(msg.author.id, filename) {
+            if !check_ownership(msg.author.id, &filename) {
                 return;
             }
 
             let filename = message_split[0];
 
             let query = "SELECT Tags FROM memes WHERE FileName = ?1;";
+            {
+                let mut stmt = conn.prepare(&query).unwrap();
 
-            let mut stmt = conn.prepare(&query).unwrap();
+                for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+                    let tags: String = row.unwrap();
 
-            for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
-                let tags: String = row.unwrap();
+                    for tag in tags.split(' ').collect::<Vec<&str>>() {
+                        let query2 = "SELECT Memes FROM tags WHERE Tag = ?1;";
+                        let mut stmt2 = conn.prepare(&query2).unwrap();
+                        for row2 in stmt2.query_map(&[("?1", &tag.trim())], |row| Ok(row.get(0).unwrap())).unwrap() {
+                            let memes_json: String = row2.unwrap();
+                            let mut memes_vec: Vec<&str> = serde_json::from_str(&memes_json).unwrap();
+                            memes_vec.remove(memes_vec.iter().position(|&r| &r == &filename).unwrap());
+                            let new_vec = serde_json::to_string(&memes_vec).unwrap();
+                            let query3 = "UPDATE tags SET Memes = ?1 WHERE Tag = ?2";
 
-                for tag in tags.split(' ').collect::<Vec<&str>>() {
-                    let query2 = "SELECT Memes FROM tags WHERE Tag = ?1;";
-                    let mut stmt2 = conn.prepare(&query2).unwrap();
-                    for row2 in stmt2.query_map(&[("?1", &tag.trim())], |row| Ok(row.get(0).unwrap())).unwrap() {
-                        let memes_json: String = row2.unwrap();
-                        let mut memes_vec: Vec<&str> = serde_json::from_str(&memes_json).unwrap();
-                        memes_vec.remove(memes_vec.iter().position(|&r| &r == &filename).unwrap());
-                        let new_vec = serde_json::to_string(&memes_vec).unwrap();
-                        let query3 = "UPDATE tags SET Memes = ?1 WHERE Tag = ?2";
-
-                        conn.execute(&query3, (new_vec, tag)).unwrap();
+                            conn.execute(&query3, (new_vec, tag)).unwrap();
+                        }
                     }
                 }
             }
@@ -199,7 +199,24 @@ impl EventHandler for TaggingHandler {
                     }
                 }
             }
-            conn.execute(&query2, (tags, &filename)).unwrap();
+
+            conn.execute(&query2, (&tags, &filename)).unwrap();
+
+            let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.
+             *Amennyiben azt szeretnéd, hogy ez a bot békén hagyjon, reagálj bármelyik üzenetére \"🔴\" emote-tal!*", &filename ,&tags);
+
+            let footer = CreateEmbedFooter::new(String::from("Készítette: ") + env::var("AUTHOR").expect("Couldn't find AUTHOR environment variable!").as_str())
+             .icon_url("https://cdn.discordapp.com/avatars/418109786622787604/fc8cd6348c2868bc7d3d15ddc0c94ff1.webp");
+
+            let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
+             .expect("Color is to be defined in hex!"));
+
+            let embed = CreateEmbed::new().color(color)
+                .title("Tagek elmentve")
+                .description(&description)
+                .footer(footer.clone());
+
+            msg.author.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
         }
     }
 }
