@@ -18,4 +18,7 @@ with open(os.devnull, 'w') as f:
         duplicates = phasher.find_duplicates(encoding_map=encodings)
 
 # Outputs the first duplicate of the provided file
-print(duplicates[sys.argv[1]][0], end='')
+try:
+    print(duplicates[sys.argv[1]][0], end='')
+except IndexError:
+    print(end='')
