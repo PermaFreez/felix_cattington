@@ -1,11 +1,7 @@
 use std::{env, fs, path};
 
-use serenity::{
-    async_trait,
-    model::{channel::Message, Color},
-    prelude::*, builder::{CreateMessage, CreateEmbed, CreateEmbedFooter},
-    all::UserId,
-};
+use poise::serenity_prelude::*;
+
 use std::process::Command;
 use rusqlite::Connection;
 use dotenv::dotenv;
@@ -29,8 +25,8 @@ impl EventHandler for InformerHandler {
 
             dotenv().ok();
 
-            let footer = CreateEmbedFooter::new(String::from("Készítette: ") + env::var("AUTHOR").expect("Couldn't find AUTHOR environment variable!").as_str())
-                .icon_url("https://cdn.discordapp.com/avatars/418109786622787604/fc8cd6348c2868bc7d3d15ddc0c94ff1.webp");
+            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
+            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
 
             let link: &str = "";
             let repost_description: String = String::from("Úgy tűnik a mém, amit beküldtél már korábban regisztrálva lett: ") + link + ". 
@@ -83,7 +79,7 @@ impl EventHandler for InformerHandler {
                 }
             }
 
-            let query = "INSERT INTO memes (FileName, Id, Tags) VALUES (?1, ?2, ?3);";
+            let query = "INSERT INTO memes (FileName, Id, Link, Tags) VALUES (?1, ?2, ?3, ?4);";
             let mut query2 = "INSERT INTO users (UserId, Memes) VALUES (?1, ?2);";
 
             let query3 = "SELECT Memes FROM users WHERE UserId = ?1";
@@ -99,7 +95,7 @@ impl EventHandler for InformerHandler {
             memes_vec.push(&file);
             memes_json = serde_json::to_string(&memes_vec).unwrap();
 
-            conn.execute(&query, (&file, &msg.id.to_string(), String::new())).unwrap();
+            conn.execute(&query, (&file, &msg.id.to_string(), &msg.link(), String::new())).unwrap();
             conn.execute(&query2, (&msg.author.id.to_string(), &memes_json)).unwrap();
 
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. 
@@ -110,7 +106,7 @@ impl EventHandler for InformerHandler {
                 .thumbnail(&attachment.url)
                 .title("Mém észlelve")
                 .description(description)
-                .footer(footer.clone());
+                .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
 
             msg.author.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
         }
@@ -205,18 +201,18 @@ impl EventHandler for TaggingHandler {
             let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.
              *Amennyiben azt szeretnéd, hogy ez a bot békén hagyjon, reagálj bármelyik üzenetére \"🔴\" emote-tal!*", &filename ,&tags);
 
-            let footer = CreateEmbedFooter::new(String::from("Készítette: ") + env::var("AUTHOR").expect("Couldn't find AUTHOR environment variable!").as_str())
-             .icon_url("https://cdn.discordapp.com/avatars/418109786622787604/fc8cd6348c2868bc7d3d15ddc0c94ff1.webp");
+            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
+            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
 
             let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
              .expect("Color is to be defined in hex!"));
 
-            let embed = CreateEmbed::new().color(color)
-                .title("Tagek elmentve")
-                .description(&description)
-                .footer(footer.clone());
+             let embed = CreateEmbed::new().color(color)
+             .title("Tagek elmentve")
+             .description(&description)
+             .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
 
-            msg.author.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
+         msg.author.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
         }
     }
 }

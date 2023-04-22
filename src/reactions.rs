@@ -1,8 +1,10 @@
-use serenity::{
+/*use serenity::{
     prelude::*,
     async_trait,
     all::{Message, Reaction, Ready},
-};
+};*/
+
+use poise::serenity_prelude::*;
 
 use rusqlite::Connection;
 
@@ -17,8 +19,6 @@ fn update_reactions(message: Message) {
     let query = "UPDATE memes SET Reactions = ?1 WHERE Id = ?2;";
 
     conn.execute(&query, (&reactions, message.id.to_string())).unwrap();
-
-    println!("{} {}", message.id, &reactions);
 }
 
 #[async_trait]

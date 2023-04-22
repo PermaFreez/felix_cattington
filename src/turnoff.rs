@@ -1,9 +1,7 @@
 use std::env;
-use serenity::{
-    async_trait,
-    prelude::*,
-    all::{User, Reaction, Message, CreateMessage, CreateEmbed, CreateEmbedFooter, Color},
-};
+
+use poise::serenity_prelude::*;
+
 use rusqlite::Connection;
 use dotenv::dotenv;
 
@@ -22,18 +20,19 @@ impl EventHandler for TurnoffHandler {
 
             if !is_user_unsubscribed(&user) {
                 dotenv().ok();
-                let footer = CreateEmbedFooter::new(String::from("Készítette: ") + env::var("AUTHOR").expect("Couldn't find AUTHOR environment variable!").as_str())
-                    .icon_url("https://cdn.discordapp.com/avatars/418109786622787604/fc8cd6348c2868bc7d3d15ddc0c94ff1.webp");
+                let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
+                let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
                 let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                     .expect("Color is to be defined in hex!"));
                 let description = "A botról sikeresen leiratkoztál! Ezentúl nem fogsz semmilyen üzenetet kapni tőle.
                  Amennyiben vissza szeretnél iratkozni írj bármilyen üzenetet a botnak.";
-
+                
                 conn.execute(query_on, &[("?1", &user_id)]).unwrap();
+                
                 let embed = CreateEmbed::new().color(color)
                     .title("Leiratkozva")
                     .description(description)
-                    .footer(footer.clone());
+                    .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
                 
                 user.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
             }
@@ -50,17 +49,19 @@ impl EventHandler for TurnoffHandler {
             
             if is_user_unsubscribed(&user) {
                 dotenv().ok();
-                let footer = CreateEmbedFooter::new(String::from("Készítette: ") + env::var("AUTHOR").expect("Couldn't find AUTHOR environment variable!").as_str())
-                    .icon_url("https://cdn.discordapp.com/avatars/418109786622787604/fc8cd6348c2868bc7d3d15ddc0c94ff1.webp");
+                let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
+                let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
                 let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                     .expect("Color is to be defined in hex!"));
                 let description = "Sikeresen visszairatkoztál a botra! Újra le tudsz iratkozni a \"🔴\" reakcióval.";
 
                 conn.execute(query_off, &[("?1", &user_id)]).unwrap();
+                
+                conn.execute(query_off, &[("?1", &user_id)]).unwrap();
                 let embed = CreateEmbed::new().color(color)
                     .title("Visszairatkozva")
                     .description(description)
-                    .footer(footer.clone());
+                    .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
                 
                 user.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
             }
