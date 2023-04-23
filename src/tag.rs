@@ -22,17 +22,35 @@ pub async fn tag(ctx: Context<'_>,
     
     let conn = Connection::open("database.db").unwrap();
 
-    let tagek_lower = &tagek.to_lowercase();
-
-    let tag_split = tagek_lower.split(' ').collect::<Vec<&str>>();
-
-    let filename = &meme;
-
     let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
     let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
 
     let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
         .expect("Color is to be defined in hex!"));
+
+    let tagek_lower = &tagek.to_lowercase();
+
+    let tag_split: Vec<&str> = tagek_lower.split(' ').collect::<Vec<&str>>();
+
+    let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
+    let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();
+
+    for i in (0..tag_split.len()) {
+        if banned_tags_vec.contains(&tag_split[i]) {
+            let description = format!("A tag-eid között a {}. tiltva van, így a tagek nem frissültek!", &i + 1);
+            let embed = CreateEmbed::new().color(color)
+             .title("Tiltott tag")
+             .description(description)
+             .footer(CreateEmbedFooter::new(&footer_text)
+             .icon_url(&footer_icon));
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} megpróbált tiltott szót beállítani tagnek! ({})", ctx.author().id, &tag_split[i]);
+            return Ok(());
+        }
+    }
+
+    let filename = &meme;
 
     if !check_ownership(ctx.author().id, &filename) {
         let embed = CreateEmbed::new().color(color)
@@ -55,7 +73,7 @@ pub async fn tag(ctx: Context<'_>,
          .icon_url(footer_icon));
         let reply = CreateReply::new().embed(embed);
         ctx.send(reply).await.unwrap();
-        info!("{} megpróbált  ({})", ctx.author().id, &meme);
+        info!("{} megpróbált egy zárolt mémet tagelni ({})", ctx.author().id, &meme);
         return Ok(());
     }
 
