@@ -37,7 +37,7 @@ impl EventHandler for InformerHandler {
         
             // Megnézi videó, vagy kép-e a csatolmány (mert hang nyilván nem lehet mém)
             let att_type = &attachment.content_type.to_owned().unwrap();
-            if att_type.matches("image").count() == 0 && att_type.matches("video").count() == 0 { 
+            if att_type.matches("image").count() == 0 && att_type.matches("video").count() == 0 && att_type.matches("audio").count() == 0 { 
                 continue;
             }
             
@@ -87,11 +87,18 @@ impl EventHandler for InformerHandler {
                             **Amennyiben ezek a mémek NEM egyeznek használd a Fals-pozitív gombot. 
                             A gombbal való visszaélés büntetést von maga után!**", &link);
 
-                        let embed = CreateEmbed::new().color(color)
-                            .thumbnail(&attachment.url)
+                        let mut embed = CreateEmbed::new().color(color)
                             .title("Repost észlelve")
                             .description(repost_description)
                             .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
+
+                        if att_type.matches("video").count() == 1 {
+                            embed = embed.thumbnail("https://cdn.discordapp.com/attachments/873153317939867708/1099754267167961088/iu.png");
+                        } else if att_type.matches("audio").count() == 1 {
+                            embed = embed.thumbnail("https://cdn.discordapp.com/attachments/873153317939867708/1099755985532366908/iu.png");
+                        } else {
+                            embed = embed.thumbnail(&attachment.url);
+                        }
             
                         let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
                         let button2 = CreateButton::new(format!("fals-poz {}", &file)).label("Fals-pozitív").style(ButtonStyle::Danger);
@@ -128,11 +135,18 @@ impl EventHandler for InformerHandler {
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. 
                 Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek>` parancsot!", &file);
 
-            let embed = CreateEmbed::new().color(color)
-                .thumbnail(&attachment.url)
+            let mut embed = CreateEmbed::new().color(color)
                 .title("Mém észlelve")
                 .description(description)
                 .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
+
+            if att_type.matches("video").count() == 1 {
+                embed = embed.thumbnail("https://cdn.discordapp.com/attachments/873153317939867708/1099754267167961088/iu.png");
+            } else if att_type.matches("audio").count() == 1 {
+                embed = embed.thumbnail("https://cdn.discordapp.com/attachments/873153317939867708/1099755985532366908/iu.png");
+            } else {
+                embed = embed.thumbnail(&attachment.url);
+            }
 
             let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
 
