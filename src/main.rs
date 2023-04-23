@@ -32,7 +32,7 @@ async fn main() {
 
     let framework = poise::FrameworkBuilder::default()
         .options(poise::FrameworkOptions {
-            commands: vec![search::search(), tag::tag()],
+            commands: vec![search::search_all(), search::search_random(), tag::tag()],
             owners: owners,
             ..Default::default()
         })
@@ -56,7 +56,8 @@ async fn main() {
 }
 
 async fn create_db() {
-    let creation_query1 = "CREATE TABLE IF NOT EXISTS memes(FileName varchar(255), Id varchar(255) PRIMARY KEY, Link varchar(255), Tags varchar(65535), Reactions varchar(65535), Locked boolean);";
+    let creation_query1 = "CREATE TABLE IF NOT EXISTS memes(FileName varchar(255), Id varchar(255) PRIMARY KEY, 
+        Link varchar(255), Tags varchar(65535), Reactions varchar(65535), Locked boolean);";
     let creation_query2 = "CREATE TABLE IF NOT EXISTS users(UserId varchar(255) PRIMARY KEY, Memes varchar(1023));";
     let creation_query3 = "CREATE TABLE IF NOT EXISTS tags(Tag varchar(255) PRIMARY KEY, Memes varchar(65535));";
     let creation_query4 = "CREATE TABLE IF NOT EXISTS turnoff(UserId varchar(255) PRIMARY KEY);";

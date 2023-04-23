@@ -15,3 +15,4 @@ poise = { git = "https://github.com/serenity-rs/poise.git", branch = "serenity-n
 log = "0.4.17"
 fern = "0.6.2"
 chrono = "0.4.24"
+rand = "0.8.5"

@@ -22,7 +22,9 @@ pub async fn tag(ctx: Context<'_>,
     
     let conn = Connection::open("database.db").unwrap();
 
-    let tag_split = &tagek.split(' ').collect::<Vec<&str>>();
+    let tagek_lower = &tagek.to_lowercase();
+
+    let tag_split = tagek_lower.split(' ').collect::<Vec<&str>>();
 
     let filename = &meme;
 
