@@ -18,9 +18,9 @@ pub struct Data {}
 #[tokio::main]
 async fn main() {
     logger::setup_logger().unwrap();
-    info!("###################");
+    info!("##################");
     info!("Program elindítva!");
-    info!("###################");
+    info!("##################");
 
     dotenv().ok();
     create_db().await;
@@ -61,6 +61,7 @@ async fn create_db() {
     let creation_query2 = "CREATE TABLE IF NOT EXISTS users(UserId varchar(255) PRIMARY KEY, Memes varchar(1023));";
     let creation_query3 = "CREATE TABLE IF NOT EXISTS tags(Tag varchar(255) PRIMARY KEY, Memes varchar(65535));";
     let creation_query4 = "CREATE TABLE IF NOT EXISTS turnoff(UserId varchar(255) PRIMARY KEY);";
+    let creation_query5 = "CREATE TABLE IF NOT EXISTS banned(UserId varchar(255) PRIMARY KEY);";
 
     let conn = rusqlite::Connection::open("database.db").unwrap();
 
@@ -68,6 +69,7 @@ async fn create_db() {
     conn.execute(creation_query2, ()).unwrap();
     conn.execute(creation_query3, ()).unwrap();
     conn.execute(creation_query4, ()).unwrap();
+    conn.execute(creation_query5, ()).unwrap();
 
     info!("Adatbázisok létrehozva (IF NOT EXISTS).");
 }

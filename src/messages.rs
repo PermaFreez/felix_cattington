@@ -32,8 +32,19 @@ impl EventHandler for InformerHandler {
             let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                 .expect("Color is to be defined in hex!"));
 
-            
             let conn = Connection::open("database.db").unwrap();
+
+            let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
+            {
+                let mut ban_stmt = conn.prepare(ban_query).unwrap();
+
+                for row in ban_stmt.query_map(&[("?1", &msg.author.id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+                    let row: u32 = row.unwrap();
+                    if row == 1 {
+                        return;
+                    }
+                }
+            }
         
             // Megnézi videó, vagy kép-e a csatolmány (mert hang nyilván nem lehet mém)
             let att_type = &attachment.content_type.to_owned().unwrap();

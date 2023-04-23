@@ -28,6 +28,33 @@ pub async fn tag(ctx: Context<'_>,
     let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
         .expect("Color is to be defined in hex!"));
 
+    let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
+    let mut is_banned = false;
+    {
+        let mut ban_stmt = conn.prepare(ban_query).unwrap();
+
+        for row in ban_stmt.query_map(&[("?1", &ctx.author().id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+            let row: u32 = row.unwrap();
+            if row == 1 {
+                is_banned = true;
+            }
+        }
+    }
+
+    if is_banned {
+        let embed = CreateEmbed::new().color(color)
+        .title("Kitiltás")
+        .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
+        .footer(CreateEmbedFooter::new(&footer_text)
+        .icon_url(&footer_icon));
+        let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+        let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
+        ctx.send(reply).await.unwrap();
+        info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
+
+        return Ok(());
+    }
+
     let tagek_lower = &tagek.to_lowercase();
 
     let tag_split: Vec<&str> = tagek_lower.split(' ').collect::<Vec<&str>>();
@@ -35,7 +62,7 @@ pub async fn tag(ctx: Context<'_>,
     let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
     let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();
 
-    for i in (0..tag_split.len()) {
+    for i in 0..tag_split.len() {
         if banned_tags_vec.contains(&tag_split[i]) {
             let description = format!("A tag-eid között a {}. tiltva van, így a tagek nem frissültek!", &i + 1);
             let embed = CreateEmbed::new().color(color)
@@ -43,7 +70,8 @@ pub async fn tag(ctx: Context<'_>,
              .description(description)
              .footer(CreateEmbedFooter::new(&footer_text)
              .icon_url(&footer_icon));
-            let reply = CreateReply::new().embed(embed);
+            let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+            let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
             ctx.send(reply).await.unwrap();
             info!("{} megpróbált tiltott szót beállítani tagnek! ({})", ctx.author().id, &tag_split[i]);
             return Ok(());

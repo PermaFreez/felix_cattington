@@ -22,6 +22,34 @@ pub async fn search_all(ctx: Context<'_>,
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
             .expect("Color is to be defined in hex!"));
 
+        let conn = Connection::open("database.db").unwrap();
+
+        let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
+        let mut is_banned = false;
+        {
+            let mut ban_stmt = conn.prepare(ban_query).unwrap();
+
+            for row in ban_stmt.query_map(&[("?1", &ctx.author().id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+                let row: u32 = row.unwrap();
+                if row == 1 {
+                    is_banned = true;
+                }
+            }
+        }
+
+        if is_banned {
+            let embed = CreateEmbed::new().color(color)
+            .title("Kitiltás")
+            .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
+            .footer(CreateEmbedFooter::new(&footer_text)
+            .icon_url(&footer_icon));
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
+
+            return Ok(());
+        }
+
         let meme_links = search(&tagek.to_lowercase(), false);
 
         let mut embed = CreateEmbed::new();
@@ -61,6 +89,34 @@ pub async fn search_random(ctx: Context<'_>,
 
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
             .expect("Color is to be defined in hex!"));
+
+        let conn = Connection::open("database.db").unwrap();
+
+        let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
+        let mut is_banned = false;
+        {
+            let mut ban_stmt = conn.prepare(ban_query).unwrap();
+
+            for row in ban_stmt.query_map(&[("?1", &ctx.author().id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+                let row: u32 = row.unwrap();
+                if row == 1 {
+                    is_banned = true;
+                }
+            }
+        }
+
+        if is_banned {
+            let embed = CreateEmbed::new().color(color)
+            .title("Kitiltás")
+            .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
+            .footer(CreateEmbedFooter::new(&footer_text)
+            .icon_url(&footer_icon));
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
+
+            return Ok(());
+        }
 
         let random_meme = search(&tagek.to_lowercase(), true);
 
