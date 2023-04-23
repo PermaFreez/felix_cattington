@@ -9,10 +9,15 @@ pub struct TurnoffHandler;
 
 #[async_trait]
 impl EventHandler for TurnoffHandler {
-    async fn reaction_add(&self, ctx: Context, rct: Reaction) {
-        let msg = rct.message(&ctx.http).await.unwrap();
-        if msg.is_private() && msg.author.bot && rct.emoji.to_string() == "🔴" {
-            let user: User = rct.user(&ctx.http).await.unwrap();
+    async fn interaction_create(&self, ctx: Context, intc: Interaction) {
+        
+        let message_component = match intc.message_component() {
+            Some(some) => some,
+            None => return,
+        };
+        let user: User = message_component.user.clone();
+
+        if message_component.data.custom_id == "leiratkozas" {
             let user_id = user.id.to_string();
 
             let conn = Connection::open("database.db").expect("Couldn't open databse.");
@@ -24,8 +29,7 @@ impl EventHandler for TurnoffHandler {
                 let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
                 let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                     .expect("Color is to be defined in hex!"));
-                let description = "A botról sikeresen leiratkoztál! Ezentúl nem fogsz semmilyen üzenetet kapni tőle.
-                 Amennyiben vissza szeretnél iratkozni írj bármilyen üzenetet a botnak.";
+                let description = "A botról sikeresen leiratkoztál! Ezentúl nem fogsz semmilyen üzenetet kapni tőle.";
                 
                 conn.execute(query_on, &[("?1", &user_id)]).unwrap();
                 
@@ -34,14 +38,14 @@ impl EventHandler for TurnoffHandler {
                     .description(description)
                     .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
                 
-                user.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
+                let button = CreateButton::new("visszairatkozas").label("Visszairatkozás").style(ButtonStyle::Success);
+                let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));
+
+                message_component.create_response(&ctx.http, reply).await.unwrap();
             }
         }
-    }
 
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.is_private() {
-            let user: User = msg.author;
+        if message_component.data.custom_id == "visszairatkozas" {
             let user_id = user.id.to_string();
 
             let conn = Connection::open("database.db").expect("Couldn't open databse.");
@@ -53,7 +57,7 @@ impl EventHandler for TurnoffHandler {
                 let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
                 let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                     .expect("Color is to be defined in hex!"));
-                let description = "Sikeresen visszairatkoztál a botra! Újra le tudsz iratkozni a \"🔴\" reakcióval.";
+                let description = "Sikeresen visszairatkoztál a botra!";
 
                 conn.execute(query_off, &[("?1", &user_id)]).unwrap();
                 
@@ -62,8 +66,11 @@ impl EventHandler for TurnoffHandler {
                     .title("Visszairatkozva")
                     .description(description)
                     .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
+
+                let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+                let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));
                 
-                user.dm(&ctx.http, CreateMessage::new().embed(embed)).await.unwrap();
+                message_component.create_response(&ctx.http, reply).await.unwrap();
             }
         }
     }

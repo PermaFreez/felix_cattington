@@ -1,12 +1,16 @@
+use poise::CreateReply;
+
 use crate::Data;
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
-/// Ad egy random mémet az adott taggel.
+/// Kiad egy random mémet az adott tag(ekk)el
 #[poise::command(slash_command, dm_only)]
 pub async fn search(ctx: Context<'_>,
     #[description = "Kereső tag"] tag: String) -> Result<(), Error> {
-    // Command code here
+    let reply = CreateReply::new().content(format!("WIP ({})", tag));
+
+    ctx.send(reply).await.unwrap();
 
     Ok(())
 }
