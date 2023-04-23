@@ -12,3 +12,6 @@ rusqlite = "0.29.0"
 cpython = "0.7.1"
 serde_json = "1.0.96"
 poise = { git = "https://github.com/serenity-rs/poise.git", branch = "serenity-next" }
+log = "0.4.17"
+fern = "0.6.2"
+chrono = "0.4.24"

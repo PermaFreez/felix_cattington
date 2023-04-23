@@ -1,5 +1,6 @@
 use std::env;
 use dotenv::dotenv;
+use log::info;
 
 use rusqlite::Connection;
 
@@ -41,12 +42,12 @@ impl EventHandler for FalsPozHandler {
              .description(repost_continue)
              .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
         
-            let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Success);
+            let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
             let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));
 
             message_component.create_response(&ctx.http, reply).await.unwrap();
 
-            println!("{} fals-pozitívként jelezte vissza a \"{}\" mémet!", &message_component.user, &split[1]);
+            info!("{} fals-pozitívként jelezte vissza a \"{}\" mémet!", &message_component.user.id, &split[1]);
         }
     }
 }

@@ -1,4 +1,5 @@
 use std::env;
+use log::info;
 
 use poise::serenity_prelude::*;
 
@@ -42,6 +43,7 @@ impl EventHandler for TurnoffHandler {
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));
 
                 message_component.create_response(&ctx.http, reply).await.unwrap();
+                info!("{} leiratkozott!", &user.id);
             }
         }
 
@@ -71,6 +73,7 @@ impl EventHandler for TurnoffHandler {
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));
                 
                 message_component.create_response(&ctx.http, reply).await.unwrap();
+                info!("{} visszairatkozott!", &user.id);
             }
         }
     }

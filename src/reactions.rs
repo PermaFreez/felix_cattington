@@ -1,11 +1,5 @@
-/*use serenity::{
-    prelude::*,
-    async_trait,
-    all::{Message, Reaction, Ready},
-};*/
-
 use poise::serenity_prelude::*;
-
+use log::info;
 use rusqlite::Connection;
 
 pub struct ReactionsHandler;
@@ -19,6 +13,7 @@ fn update_reactions(message: Message) {
     let query = "UPDATE memes SET Reactions = ?1 WHERE Id = ?2;";
 
     conn.execute(&query, (&reactions, message.id.to_string())).unwrap();
+    info!("Reakciók frissítve: {}", message.id)
 }
 
 #[async_trait]
@@ -37,6 +32,6 @@ impl EventHandler for ReactionsHandler {
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        info!("{} csatlakozva!", ready.user.name);
     }
 }

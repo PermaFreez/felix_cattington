@@ -4,9 +4,11 @@ mod reactions;
 mod search;
 mod tag;
 mod falspoz;
+mod logger;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
+use log::info;
 
 use poise::serenity_prelude::{GatewayIntents, UserId};
 
@@ -15,6 +17,11 @@ pub struct Data {}
 
 #[tokio::main]
 async fn main() {
+    logger::setup_logger().unwrap();
+    info!("###################");
+    info!("Program elindítva!");
+    info!("###################");
+
     dotenv().ok();
     create_db().await;
 
@@ -46,7 +53,6 @@ async fn main() {
         });
 
     framework.run().await.unwrap();
-
 }
 
 async fn create_db() {
@@ -61,4 +67,6 @@ async fn create_db() {
     conn.execute(creation_query2, ()).unwrap();
     conn.execute(creation_query3, ()).unwrap();
     conn.execute(creation_query4, ()).unwrap();
+
+    info!("Adatbázisok létrehozva (IF NOT EXISTS).");
 }

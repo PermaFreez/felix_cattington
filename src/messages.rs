@@ -1,4 +1,5 @@
 use std::{env, fs, path};
+use log::info;
 
 use poise::serenity_prelude::*;
 
@@ -96,6 +97,7 @@ impl EventHandler for InformerHandler {
                         let button2 = CreateButton::new(format!("fals-poz {}", &file)).label("Fals-pozitív").style(ButtonStyle::Danger);
 
                         msg.author.dm(&ctx.http, CreateMessage::new().embed(embed).button(button).button(button2)).await.unwrap();
+                        info!("Repost érzékelve: {}. Küldte: {}.", &file, msg.author.id);
                         locked = true;
                     }
                     break;
@@ -136,6 +138,7 @@ impl EventHandler for InformerHandler {
 
             if !locked {
                 msg.author.dm(&ctx.http, CreateMessage::new().embed(embed).button(button)).await.unwrap();
+                info!("Mém érzékelve: {}. Küldő: {}", &file, msg.author.id);
             }
         }
     }

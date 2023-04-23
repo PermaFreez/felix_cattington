@@ -1,5 +1,6 @@
 use std::env;
 use dotenv::dotenv;
+use log::info;
 
 use poise::{
     CreateReply,
@@ -23,7 +24,7 @@ pub async fn tag(ctx: Context<'_>,
 
     let tag_split = &tagek.split(' ').collect::<Vec<&str>>();
 
-    let filename = meme;
+    let filename = &meme;
 
     let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
     let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
@@ -39,6 +40,7 @@ pub async fn tag(ctx: Context<'_>,
          .icon_url(footer_icon));
         let reply = CreateReply::new().embed(embed);
         ctx.send(reply).await.unwrap();
+        info!("{} megpróbálta egy zárolt mémet tagelni ({})", ctx.author().id, &meme);
         return Ok(());
     }
 
@@ -51,6 +53,7 @@ pub async fn tag(ctx: Context<'_>,
          .icon_url(footer_icon));
         let reply = CreateReply::new().embed(embed);
         ctx.send(reply).await.unwrap();
+        info!("{} megpróbált  ({})", ctx.author().id, &meme);
         return Ok(());
     }
 
@@ -136,6 +139,7 @@ pub async fn tag(ctx: Context<'_>,
     let reply = CreateReply::new().embed(embed).components(components);
 
     ctx.send(reply).await.unwrap();
+    info!("{} fájl új tagjei: {}", &meme, &tagek);
 
     Ok(())
 }
