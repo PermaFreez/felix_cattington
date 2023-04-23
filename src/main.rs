@@ -56,7 +56,7 @@ async fn main() {
 }
 
 async fn create_db() {
-    let creation_query1 = "CREATE TABLE IF NOT EXISTS memes(FileName varchar(255), Id varchar(255) PRIMARY KEY, 
+    let creation_query1 = "CREATE TABLE IF NOT EXISTS memes(FileName varchar(255) PRIMARY KEY, Id varchar(255), 
         Link varchar(255), Tags varchar(65535), Reactions varchar(65535), Locked boolean);";
     let creation_query2 = "CREATE TABLE IF NOT EXISTS users(UserId varchar(255) PRIMARY KEY, Memes varchar(1023));";
     let creation_query3 = "CREATE TABLE IF NOT EXISTS tags(Tag varchar(255) PRIMARY KEY, Memes varchar(65535));";
