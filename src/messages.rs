@@ -21,7 +21,7 @@ impl EventHandler for InformerHandler {
         let channels: Vec<&str> = env_channels.split(' ').collect();
         let channel_id: &str = &msg.channel_id.to_string();
 
-        if channels.contains(&channel_id) {
+        if !channels.contains(&channel_id) {
             return;
         }
 

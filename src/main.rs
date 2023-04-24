@@ -5,6 +5,7 @@ mod search;
 mod tag;
 mod falspoz;
 mod logger;
+mod belep;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -42,6 +43,7 @@ async fn main() {
             .event_handler(falspoz::FalsPozHandler)
             .event_handler(reactions::ReactionsHandler)
             .event_handler(turnoff::TurnoffHandler)
+            .event_handler(belep::BelepHandler)
         })
         .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGE_REACTIONS)
         .user_data_setup(|ctx, _ready, framework| {

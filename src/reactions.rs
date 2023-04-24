@@ -1,6 +1,4 @@
-use poise::serenity_prelude::{Message, async_trait, EventHandler, Context,
-    Reaction, Ready
-};
+use poise::serenity_prelude::{Message, async_trait, EventHandler, Context, Reaction};
 use log::info;
 use rusqlite::Connection;
 
@@ -31,9 +29,5 @@ impl EventHandler for ReactionsHandler {
         let message = reaction.message(ctx.http).await.unwrap();
 
         update_reactions(message);
-    }
-
-    async fn ready(&self, _: Context, ready: Ready) {
-        info!("{} csatlakozva!", ready.user.name);
     }
 }

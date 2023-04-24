@@ -88,7 +88,7 @@ pub async fn tag(ctx: Context<'_>,
          .icon_url(footer_icon));
         let reply = CreateReply::new().embed(embed);
         ctx.send(reply).await.unwrap();
-        info!("{} megpróbálta egy zárolt mémet tagelni ({})", ctx.author().id, &meme);
+        info!("{} megpróbált egy nem létező/nem saját mémet tagelni ({})", ctx.author().id, &meme);
         return Ok(());
     }
 
