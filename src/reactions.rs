@@ -1,4 +1,6 @@
-use poise::serenity_prelude::*;
+use poise::serenity_prelude::{Message, async_trait, EventHandler, Context,
+    Reaction, Ready
+};
 use log::info;
 use rusqlite::Connection;
 

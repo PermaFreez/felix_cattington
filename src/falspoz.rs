@@ -4,7 +4,11 @@ use log::info;
 
 use rusqlite::Connection;
 
-use poise::serenity_prelude::*;
+use poise::serenity_prelude::{EventHandler,
+    async_trait, Context, Interaction, Color, CreateEmbed,
+    CreateEmbedFooter, CreateButton, ButtonStyle,
+    CreateInteractionResponse, CreateInteractionResponseMessage
+};
 
 pub struct FalsPozHandler;
 

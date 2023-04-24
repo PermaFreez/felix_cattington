@@ -1,7 +1,9 @@
 use std::{env, fs, path};
 use log::info;
 
-use poise::serenity_prelude::*;
+use poise::serenity_prelude::{async_trait, EventHandler, Context, Message,
+    Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateMessage
+};
 
 use std::process::Command;
 use rusqlite::Connection;
@@ -13,8 +15,13 @@ pub struct InformerHandler;
 #[async_trait]
 impl EventHandler for InformerHandler {
     async fn message(&self, ctx: Context, msg: Message) {
-        // Megnézi a mém csatornába érkezett-e az üzenet.
-        if msg.channel_id.to_string() != env::var("MEME_CHANNEL").expect("Couldn't find environment variable!") {
+        // Megnézi egy mém csatornába érkezett-e az üzenet.
+        
+        let env_channels = env::var("MEME_CHANNEL").expect("Couldn't find environment variable!");
+        let channels: Vec<&str> = env_channels.split(' ').collect();
+        let channel_id: &str = &msg.channel_id.to_string();
+
+        if channels.contains(&channel_id) {
             return;
         }
 

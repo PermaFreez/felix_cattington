@@ -1,7 +1,10 @@
 use std::env;
 use log::info;
 
-use poise::serenity_prelude::*;
+use poise::serenity_prelude::{async_trait, EventHandler, Context, Interaction,
+    Color, User, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse,
+    CreateInteractionResponseMessage, CreateButton, ButtonStyle
+};
 
 use rusqlite::Connection;
 use dotenv::dotenv;
