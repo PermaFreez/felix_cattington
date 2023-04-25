@@ -1,5 +1,4 @@
 use std::env;
-use dotenv::dotenv;
 use log::info;
 
 use poise::{
@@ -19,8 +18,6 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 pub async fn tag(ctx: Context<'_>,
     #[description = "Az adott mém fájlneve (feltöltési értesítőben)"] meme: String,
     #[description = "Tagek (Szóközzel elválasztva)"] tagek: String) -> Result<(), Error> {
-    
-    let conn = Connection::open("database.db").unwrap();
 
     let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
     let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
@@ -28,43 +25,38 @@ pub async fn tag(ctx: Context<'_>,
     let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
         .expect("Color is to be defined in hex!"));
 
-    let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
-    let mut is_banned = false;
-    {
-        let mut ban_stmt = conn.prepare(ban_query).unwrap();
+    match tag_fn(&ctx.author().id, &meme, &tagek) {
+        TagResult::Success => {
+            let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.", &meme ,&tagek);
 
-        for row in ban_stmt.query_map(&[("?1", &ctx.author().id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
-            let row: u32 = row.unwrap();
-            if row == 1 {
-                is_banned = true;
-            }
+            let embed = CreateEmbed::new().color(color)
+             .title("Tagek elmentve")
+             .description(&description)
+             .footer(CreateEmbedFooter::new(footer_text)
+             .icon_url(footer_icon));
+        
+            let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+            let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
+            let reply = CreateReply::new().embed(embed).components(components);
+        
+            ctx.send(reply).await.unwrap();
+            info!("{} fájl új tagjei: {}", &meme, &tagek);
+        
+            Ok(())
         }
-    }
-
-    if is_banned {
-        let embed = CreateEmbed::new().color(color)
-        .title("Kitiltás")
-        .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
-        .footer(CreateEmbedFooter::new(&footer_text)
-        .icon_url(&footer_icon));
-        let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
-        let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
-        ctx.send(reply).await.unwrap();
-        info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
-
-        return Ok(());
-    }
-
-    let tagek_lower = &tagek.to_lowercase();
-
-    let tag_split: Vec<&str> = tagek_lower.split(' ').collect::<Vec<&str>>();
-
-    let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
-    let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();
-
-    for i in 0..tag_split.len() {
-        if banned_tags_vec.contains(&tag_split[i]) {
-            let description = format!("A tag-eid között a {}. tiltva van, így a tagek nem frissültek!", &i + 1);
+        TagResult::Banned => {
+            let embed = CreateEmbed::new().color(color)
+             .title("Kitiltás")
+             .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
+             .footer(CreateEmbedFooter::new(&footer_text)
+             .icon_url(&footer_icon));
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
+            return Ok(());
+        }
+        TagResult::BannedTag(tag) => {
+            let description = format!("A tag-eid között a {}. tiltva van, így a tagek nem frissültek!", tag.1);
             let embed = CreateEmbed::new().color(color)
              .title("Tiltott tag")
              .description(description)
@@ -73,39 +65,70 @@ pub async fn tag(ctx: Context<'_>,
             let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
             let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
             ctx.send(reply).await.unwrap();
-            info!("{} megpróbált tiltott szót beállítani tagnek! ({})", ctx.author().id, &tag_split[i]);
+            info!("{} megpróbált tiltott szót beállítani tagnek! ({})", ctx.author().id, tag.0);
+            return Ok(());
+        }
+        TagResult::Locked => {
+            let embed = CreateEmbed::new().color(color)
+             .title("Zárolt mém")
+             .description("Ez a mém zárolva van. Ez leggyakrabban amiatt van, mert nem te vagy az első aki beküldte. 
+                Amennyiben a mém nem egy repost, a feltöltési értesítő alatt feloldhatod a zárolását.")
+             .footer(CreateEmbedFooter::new(footer_text)
+             .icon_url(footer_icon));
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} megpróbált egy zárolt mémet tagelni ({})", ctx.author().id, &meme);
+            return Ok(());
+        }
+        TagResult::NotOwned => {
+            let embed = CreateEmbed::new().color(color)
+             .title("Hiba")
+             .description("Ezt a mémet nem te küldted, vagy nem létezik!")
+             .footer(CreateEmbedFooter::new(footer_text)
+             .icon_url(footer_icon));
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} megpróbált egy nem létező/nem saját mémet tagelni ({})", ctx.author().id, &meme);
             return Ok(());
         }
     }
+}
 
-    let filename = &meme;
+pub enum TagResult {
+    Success,
+    Banned,
+    BannedTag((String, usize)),
+    Locked,
+    NotOwned,
+}
 
-    if !check_ownership(ctx.author().id, &filename) {
-        let embed = CreateEmbed::new().color(color)
-         .title("Hiba")
-         .description("Ezt a mémet nem te küldted, vagy nem létezik!")
-         .footer(CreateEmbedFooter::new(footer_text)
-         .icon_url(footer_icon));
-        let reply = CreateReply::new().embed(embed);
-        ctx.send(reply).await.unwrap();
-        info!("{} megpróbált egy nem létező/nem saját mémet tagelni ({})", ctx.author().id, &meme);
-        return Ok(());
+pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
+    let conn = Connection::open("database.db").unwrap();
+
+    if check_banned(user) {
+        return TagResult::Banned;
+    }
+
+    let tagek_lower = &tags.to_lowercase();
+
+    let tag_split: Vec<&str> = tagek_lower.split(' ').collect::<Vec<&str>>();
+
+    let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
+    let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();
+
+    for i in 0..tag_split.len() {
+        if banned_tags_vec.contains(&tag_split[i]) {
+            return TagResult::BannedTag((tag_split[i].to_string(), &i + 1));
+        }
+    }
+
+    if !check_ownership(user, &filename) {
+        return TagResult::NotOwned;
     }
 
     if check_locked(&filename) {
-        let embed = CreateEmbed::new().color(color)
-         .title("Zárolt mém")
-         .description("Ez a mém zárolva van. Ez leggyakrabban amiatt van, mert nem te vagy az első aki beküldte. 
-            Amennyiben a mém nem egy repost, a feltöltési értesítő alatt feloldhatod a zárolását.")
-         .footer(CreateEmbedFooter::new(footer_text)
-         .icon_url(footer_icon));
-        let reply = CreateReply::new().embed(embed);
-        ctx.send(reply).await.unwrap();
-        info!("{} megpróbált egy zárolt mémet tagelni ({})", ctx.author().id, &meme);
-        return Ok(());
+        return TagResult::Locked;
     }
-
-    dotenv().ok();
 
     let query = "SELECT Tags FROM memes WHERE FileName = ?1;";
     {
@@ -174,25 +197,10 @@ pub async fn tag(ctx: Context<'_>,
 
     conn.execute(&query2, (&tags, &filename)).unwrap();
 
-    let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.", &filename ,&tags);
-
-    let embed = CreateEmbed::new().color(color)
-     .title("Tagek elmentve")
-     .description(&description)
-     .footer(CreateEmbedFooter::new(footer_text)
-     .icon_url(footer_icon));
-
-    let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
-    let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
-    let reply = CreateReply::new().embed(embed).components(components);
-
-    ctx.send(reply).await.unwrap();
-    info!("{} fájl új tagjei: {}", &meme, &tagek);
-
-    Ok(())
+    return TagResult::Success;
 }
 
-fn check_ownership(user_id: UserId, filename: &str) -> bool {
+pub fn check_ownership(user_id: &UserId, filename: &str) -> bool {
     let conn = Connection::open("database.db").unwrap();
 
     let query = "SELECT Memes FROM users WHERE UserId = ?1;";
@@ -210,7 +218,7 @@ fn check_ownership(user_id: UserId, filename: &str) -> bool {
     false
 }
 
-fn check_locked(filename: &str) -> bool {
+pub fn check_locked(filename: &str) -> bool {
     let conn = Connection::open("database.db").unwrap();
 
     let query = "SELECT Locked FROM memes WHERE FileName = ?1;";
@@ -224,4 +232,21 @@ fn check_locked(filename: &str) -> bool {
     }
 
     false
+}
+
+pub fn check_banned(user_id: &UserId) -> bool {
+    let conn = Connection::open("database.db").unwrap();
+    let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
+    let mut is_banned = false;
+
+    let mut ban_stmt = conn.prepare(ban_query).unwrap();
+
+    for row in ban_stmt.query_map(&[("?1", &user_id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+        let row: u32 = row.unwrap();
+        if row == 1 {
+            is_banned = true;
+        }
+    }
+
+    is_banned
 }

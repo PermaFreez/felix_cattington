@@ -101,9 +101,9 @@ impl EventHandler for InformerHandler {
                         }
 
                         let repost_description: String = format!("Úgy tűnik a mém, amit beküldtél már korábban regisztrálva lett: {}. 
-                            Amennyiben az időkülönbséget a két beküldés között túl rövidnek ítéled töröld a sajátod.
-                            **Amennyiben ezek a mémek NEM egyeznek használd a Fals-pozitív gombot. 
-                            A gombbal való visszaélés büntetést von maga után!**", &link);
+                        Amennyiben az időkülönbséget a két beküldés között túl rövidnek ítéled töröld a sajátod. 
+                        **Amennyiben ezek a mémek NEM egyeznek használd a Fals-pozitív gombot. 
+                        A gombbal való visszaélés büntetést von maga után!**", &link);
 
                         let mut embed = CreateEmbed::new().color(color)
                             .title("Repost észlelve")
@@ -138,8 +138,8 @@ impl EventHandler for InformerHandler {
 
             let mut memes_json = String::from("[]");
 
-            for memes in conn.prepare(&query3).unwrap().query_map(&[("?1", &msg.author.id.to_string())], |row| Ok(row.get(0))).unwrap() {
-                memes_json = memes.unwrap().unwrap();
+            for memes in conn.prepare(&query3).unwrap().query_map(&[("?1", &msg.author.id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+                memes_json = memes.unwrap();
                 query2 = "UPDATE users SET Memes = ?2 WHERE UserId = ?1;";
             }
 
@@ -166,10 +166,11 @@ impl EventHandler for InformerHandler {
                 embed = embed.thumbnail(&attachment.url);
             }
 
-            let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+            let button = CreateButton::new(format!("quicktag@{}", &file)).label("Gyorscimkézés").style(ButtonStyle::Secondary);
+            let button2 = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
 
             if !locked {
-                msg.author.dm(&ctx.http, CreateMessage::new().embed(embed).button(button)).await.unwrap();
+                msg.author.dm(&ctx.http, CreateMessage::new().embed(embed).button(button).button(button2)).await.unwrap();
                 info!("Mém érzékelve: {}. Küldő: {}", &file, msg.author.id);
             }
         }

@@ -6,6 +6,8 @@ mod tag;
 mod falspoz;
 mod logger;
 mod belep;
+mod help;
+mod quicktag;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -33,7 +35,10 @@ async fn main() {
 
     let framework = poise::FrameworkBuilder::default()
         .options(poise::FrameworkOptions {
-            commands: vec![search::search_all(), search::search_random(), tag::tag()],
+            commands: vec![search::search_all(),
+                search::search_random(),
+                tag::tag(),
+                help::help()],
             owners: owners,
             ..Default::default()
         })
@@ -44,6 +49,7 @@ async fn main() {
             .event_handler(reactions::ReactionsHandler)
             .event_handler(turnoff::TurnoffHandler)
             .event_handler(belep::BelepHandler)
+            .event_handler(quicktag::QuickTagHandler)
         })
         .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGE_REACTIONS)
         .user_data_setup(|ctx, _ready, framework| {
@@ -64,6 +70,7 @@ async fn create_db() {
     let creation_query3 = "CREATE TABLE IF NOT EXISTS tags(Tag varchar(255) PRIMARY KEY, Memes varchar(65535));";
     let creation_query4 = "CREATE TABLE IF NOT EXISTS turnoff(UserId varchar(255) PRIMARY KEY);";
     let creation_query5 = "CREATE TABLE IF NOT EXISTS banned(UserId varchar(255) PRIMARY KEY);";
+    let creation_query6 = "CREATE TABLE IF NOT EXISTS quicktag(UserId varchar(255) PRIMARY KEY, FileName varchar(255));";
 
     let conn = rusqlite::Connection::open("database.db").unwrap();
 
@@ -72,6 +79,7 @@ async fn create_db() {
     conn.execute(creation_query3, ()).unwrap();
     conn.execute(creation_query4, ()).unwrap();
     conn.execute(creation_query5, ()).unwrap();
+    conn.execute(creation_query6, ()).unwrap();
 
     info!("Adatbázisok létrehozva (IF NOT EXISTS).");
 }
