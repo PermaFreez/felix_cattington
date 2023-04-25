@@ -13,8 +13,8 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
         
         let description = "**A bot jelenleg három parancsot támogat:**
         ```\
-        /tag <fájlnév> <cimkék szóközzel elválasztva>\n\
-        Pl. /tag valamivalami-42.png cica macska szisza\n\
+        /tag <fájlnév> <cimkék vesszővel elválasztva>\n\
+        Pl. /tag valamivalami-42.png cica,macska,szisza\n\
         Ez rá fogja tenni a valamivalami-42.png mémre a \"cica\" \"macska\" és \"szisza\" cimkét.\
         ```\
         ```\

@@ -100,9 +100,9 @@ impl EventHandler for InformerHandler {
                             }
                         }
 
-                        let repost_description: String = format!("Úgy tűnik a mém, amit beküldtél már korábban regisztrálva lett: {}. 
-                        Amennyiben az időkülönbséget a két beküldés között túl rövidnek ítéled töröld a sajátod. 
-                        **Amennyiben ezek a mémek NEM egyeznek használd a Fals-pozitív gombot. 
+                        let repost_description: String = format!("Úgy tűnik a mém, amit beküldtél már korábban regisztrálva lett: {}. \
+                        Amennyiben az időkülönbséget a két beküldés között túl rövidnek ítéled töröld a sajátod. \
+                        **Amennyiben ezek a mémek NEM egyeznek használd a Fals-pozitív gombot. \
                         A gombbal való visszaélés büntetést von maga után!**", &link);
 
                         let mut embed = CreateEmbed::new().color(color)
@@ -150,8 +150,8 @@ impl EventHandler for InformerHandler {
             conn.execute(&query, (&file, &msg.id.to_string(), &msg.link(), String::new(), locked)).unwrap();
             conn.execute(&query2, (&msg.author.id.to_string(), &memes_json)).unwrap();
 
-            let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. 
-                Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek>` parancsot!", &file);
+            let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. \
+            Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek vesszővel elválasztva>` parancsot!", &file);
 
             let mut embed = CreateEmbed::new().color(color)
                 .title("Mém észlelve")
