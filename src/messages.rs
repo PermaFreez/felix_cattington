@@ -166,7 +166,7 @@ impl EventHandler for InformerHandler {
                 embed = embed.thumbnail(&attachment.url);
             }
 
-            let button = CreateButton::new(format!("quicktag@{}", &file)).label("Gyorscimkézés").style(ButtonStyle::Secondary);
+            let button = CreateButton::new(format!("quicktag@{}", &file)).label("Gyorscimkézés").style(ButtonStyle::Primary);
             let button2 = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
 
             if !locked {

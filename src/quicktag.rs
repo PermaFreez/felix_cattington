@@ -4,7 +4,8 @@ use log::info;
 use poise::serenity_prelude::EventHandler;
 use poise::serenity_prelude::{async_trait, Context, Interaction,
     User, CreateEmbed, CreateEmbedFooter, Message,
-    Color, CreateInteractionResponse, CreateInteractionResponseMessage
+    Color, CreateInteractionResponse, CreateInteractionResponseMessage, 
+    CreateButton, ButtonStyle, CreateMessage
 };
 
 use rusqlite::{Connection, params};
@@ -100,6 +101,12 @@ impl EventHandler for QuickTagHandler {
         if msg.is_private() {
             let conn = Connection::open("database.db").unwrap();
 
+            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
+            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
+        
+            let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
+                .expect("Color is to be defined in hex!"));
+
             let mut filename = String::new();
             {
                 let query = "SELECT FileName FROM quicktag WHERE UserId = ?1;";
@@ -121,8 +128,17 @@ impl EventHandler for QuickTagHandler {
                     conn.execute(query, params![msg.author.id.to_string().as_str()]).unwrap();
 
                     let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.", &filename, &msg.content);
+
+
+                    let embed = CreateEmbed::new().color(color)
+                    .title("Tagek elmentve")
+                    .description(&description)
+                    .footer(CreateEmbedFooter::new(footer_text)
+                    .icon_url(footer_icon));
                     
-                    msg.reply(&ctx.http, description).await.unwrap();
+                    let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+                        
+                    msg.author.dm(&ctx.http, CreateMessage::new().embed(embed).button(button)).await.unwrap();
                     info!("{} fájl új tagjei: {}", &filename, &msg.content);
                 }
                 _ => ()

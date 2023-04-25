@@ -8,7 +8,7 @@ use poise::{
 
 use rusqlite::Connection;
 
-use crate::Data;
+use crate::{Data, TAG_SEPARATOR};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -111,7 +111,7 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
 
     let tagek_lower = &tags.to_lowercase();
 
-    let tag_split: Vec<&str> = tagek_lower.split(' ').collect::<Vec<&str>>();
+    let tag_split: Vec<&str> = tagek_lower.split(TAG_SEPARATOR).collect::<Vec<&str>>();
 
     let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
     let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();

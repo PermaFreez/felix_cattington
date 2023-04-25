@@ -17,6 +17,7 @@ use poise::serenity_prelude::{GatewayIntents, UserId};
 
 pub struct Data {}
 
+const TAG_SEPARATOR: char = ',';
 
 #[tokio::main]
 async fn main() {
