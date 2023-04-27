@@ -49,7 +49,7 @@ impl EventHandler for QuickTagHandler {
                 info!("{} tiltva van, de megpróbált írni a botnak!", user_id);
                 return;
             }
-            println!("{}", &filename);
+            
             if !tag::check_ownership(&user.id, &filename) {
                 let embed = CreateEmbed::new().color(color)
                  .title("Hiba")
@@ -75,7 +75,7 @@ impl EventHandler for QuickTagHandler {
                 return;
             }
 
-            let description = format!("Aktiváltad a **```{}```** mém gyorscimkézését! \
+            let description = format!("Aktiváltad a **`{}`** mém gyorscimkézését! \
             A következő üzeneted összes szava regisztrálva lesz, mint tag!", &filename);
 
             let embed = CreateEmbed::new().color(color)
@@ -88,9 +88,11 @@ impl EventHandler for QuickTagHandler {
 
             let conn = Connection::open("database.db").unwrap();
 
-            let query = "INSERT INTO quicktag (UserId, FileName) VALUES (?1, ?2);";
+            let query = "DELETE FROM quicktag WHERE UserId = ?1;";
+            let query2 = "INSERT INTO quicktag (UserId, FileName) VALUES (?1, ?2);";
 
-            conn.execute(query, (&user_id, &filename)).unwrap();
+            conn.execute(query, &[("?1", &user_id)]).unwrap();
+            conn.execute(query2, (&user_id, &filename)).unwrap();
 
             info!("{} aktiválta a {} gyorscimkézését!", user_id, &filename);
         }

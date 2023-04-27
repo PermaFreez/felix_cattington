@@ -9,7 +9,7 @@ use std::process::Command;
 use rusqlite::Connection;
 use dotenv::dotenv;
 
-use crate::turnoff;
+use crate::{turnoff, schedule};
 pub struct InformerHandler;
 
 #[async_trait]
@@ -132,23 +132,11 @@ impl EventHandler for InformerHandler {
             }
 
             let query = "INSERT INTO memes (FileName, Id, Link, Tags, Locked) VALUES (?1, ?2, ?3, ?4, ?5);";
-            let mut query2 = "INSERT INTO users (UserId, Memes) VALUES (?1, ?2);";
-
-            let query3 = "SELECT Memes FROM users WHERE UserId = ?1";
-
-            let mut memes_json = String::from("[]");
-
-            for memes in conn.prepare(&query3).unwrap().query_map(&[("?1", &msg.author.id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
-                memes_json = memes.unwrap();
-                query2 = "UPDATE users SET Memes = ?2 WHERE UserId = ?1;";
-            }
-
-            let mut memes_vec: Vec<&str> = serde_json::from_str(&memes_json).unwrap();
-            memes_vec.push(&file);
-            memes_json = serde_json::to_string(&memes_vec).unwrap();
 
             conn.execute(&query, (&file, &msg.id.to_string(), &msg.link(), String::new(), locked)).unwrap();
-            conn.execute(&query2, (&msg.author.id.to_string(), &memes_json)).unwrap();
+            crate::user::add_ownership(&msg.author.id.to_string(), &file);
+
+            tokio::spawn(schedule::unlock_public(file.clone()));
 
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. \
             Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek vesszővel elválasztva>` parancsot!", &file);

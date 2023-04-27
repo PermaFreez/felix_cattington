@@ -11,12 +11,11 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
-                "[{}:{}:{} {} {}] {}",
+                "[{}:{}:{} {}] {}",
                 chrono::offset::Local::now().hour(),
                 chrono::offset::Local::now().minute(),
                 chrono::offset::Local::now().second(),
                 record.level(),
-                record.target(),
                 message
             ))
         })

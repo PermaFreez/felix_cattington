@@ -116,9 +116,9 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
     let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
     let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();
 
-    for i in 0..tag_split.len() {
-        if banned_tags_vec.contains(&tag_split[i]) {
-            return TagResult::BannedTag((tag_split[i].to_string(), &i + 1));
+    for i in 0..banned_tags_vec.len() {
+        if &tags.matches(banned_tags_vec[i]).count() > &0 {
+            return TagResult::BannedTag((banned_tags_vec[i].to_string(), &i + 1));
         }
     }
 
@@ -157,10 +157,17 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
 
     let mut tags = String::new();
     for tag in 0..tag_split.len() {
-        tags = tags + tag_split[tag] + " ";
+        let current_tag = tag_split[tag].trim();
+
+        if tags.is_empty() {
+            tags = current_tag.to_string();
+        } else {
+            tags = tags + " " + current_tag;
+        }
+        
         let query3 = "SELECT COUNT(*) FROM tags WHERE Tag = ?1;";
         let mut stmt2 = conn.prepare(&query3).unwrap();
-        for row2 in stmt2.query_map(&[("?1", &tag_split[tag])], |row| Ok(row.get(0).unwrap())).unwrap() {
+        for row2 in stmt2.query_map(&[("?1", &current_tag)], |row| Ok(row.get(0).unwrap())).unwrap() {
             
             let count: i32 = row2.unwrap();
 
@@ -171,14 +178,14 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
                 let new_json = serde_json::to_string(&memes_vec).unwrap();
 
                 let query4 = "INSERT INTO tags (Tag, Memes) VALUES (?1, ?2);";
-                conn.execute(&query4, (tag_split[tag], new_json)).unwrap();
+                conn.execute(&query4, (current_tag, new_json)).unwrap();
                 
             } else {
                 
                 let query4 = "SELECT (Memes) FROM tags WHERE Tag = ?1;";
                 let mut stmt3 = conn.prepare(&query4).unwrap();
 
-                for row3 in stmt3.query_map(&[("?1", tag_split[tag])], |row| Ok(row.get(0).unwrap())).unwrap() {
+                for row3 in stmt3.query_map(&[("?1", current_tag)], |row| Ok(row.get(0).unwrap())).unwrap() {
 
                     let memes: String = row3.unwrap();
 
@@ -203,11 +210,25 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
 pub fn check_ownership(user_id: &UserId, filename: &str) -> bool {
     let conn = Connection::open("database.db").unwrap();
 
-    let query = "SELECT Memes FROM users WHERE UserId = ?1;";
-
+    let query = "SELECT Count(*) FROM upforgrabs WHERE FileName = ?1";
     let mut stmt = conn.prepare(&query).unwrap();
+    let mut count: u8 = 0;
+    for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+        count = row.unwrap();
+    }
 
-    for row in stmt.query_map(&[("?1", &user_id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+    if count == 1 {
+        let query2 = "DELETE FROM upforgrabs WHERE FileName = ?1";
+        conn.execute(&query2, &[("?1", &filename)]).unwrap();
+        crate::user::add_ownership(&user_id.to_string(), &filename.to_string());
+        return true;
+    }
+
+    let query2 = "SELECT Memes FROM users WHERE UserId = ?1;";
+
+    let mut stmt2 = conn.prepare(&query2).unwrap();
+
+    for row in stmt2.query_map(&[("?1", &user_id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
         let memes: String = row.unwrap();
         let memes_array: Vec<&str> = serde_json::from_str(&memes).unwrap();
         if memes_array.iter().position(|&r| r == filename).is_some() {
