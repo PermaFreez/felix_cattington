@@ -20,11 +20,12 @@ use poise::serenity_prelude::{GatewayIntents, UserId};
 pub struct Data {}
 
 const TAG_SEPARATOR: char = ',';
-const UNLOCK_TIME: u64 = 5;
+const UNLOCK_TIME: u64 = 300;
 
 #[tokio::main]
 async fn main() {
     logger::setup_logger().unwrap();
+    tokio::spawn(schedule::daily_new_log());
     info!("##################");
     info!("Program elindítva!");
     info!("##################");

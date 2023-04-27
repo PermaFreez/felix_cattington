@@ -5,7 +5,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
 
     fs::create_dir_all("logs/").unwrap();
 
-    let log_file = format!("logs/start-{}-{}-{}.log", 
+    let log_file = format!("logs/{}-{}-{}.log", 
         chrono::offset::Local::now().year(), chrono::offset::Local::now().month(), chrono::offset::Local::now().day());
     
     fern::Dispatch::new()

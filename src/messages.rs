@@ -27,10 +27,6 @@ impl EventHandler for InformerHandler {
 
         for attachment in &msg.attachments {
 
-            if turnoff::is_user_unsubscribed(&msg.author) {
-                return;
-            }
-
             dotenv().ok();
 
             let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
@@ -137,6 +133,10 @@ impl EventHandler for InformerHandler {
             crate::user::add_ownership(&msg.author.id.to_string(), &file);
 
             tokio::spawn(schedule::unlock_public(file.clone()));
+
+            if turnoff::is_user_unsubscribed(&msg.author) {
+                return;
+            }
 
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. \
             Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek vesszővel elválasztva>` parancsot!", &file);
