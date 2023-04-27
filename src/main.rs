@@ -10,6 +10,7 @@ mod help;
 mod quicktag;
 mod schedule;
 mod user;
+mod status;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -55,6 +56,8 @@ async fn main() {
             .event_handler(turnoff::TurnoffHandler)
             .event_handler(belep::BelepHandler)
             .event_handler(quicktag::QuickTagHandler)
+            .status(status::set_online_status())
+            .activity(status::set_custom_status().unwrap())
         })
         .intents(GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT | GatewayIntents::GUILD_MESSAGE_REACTIONS)
         .user_data_setup(|ctx, _ready, framework| {
