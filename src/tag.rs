@@ -281,7 +281,9 @@ pub fn unlock_all() {
     for row in stmt.query_map([], |row| Ok(row.get(0).unwrap())).unwrap() {
         let filename: String = row.unwrap();
 
-        conn.execute(&query2, &[("?1", &filename)]).unwrap();
-        info!("A \"{}\" mémet mostantól bárki tagelheti!", &filename);
+        match conn.execute(&query2, &[("?1", &filename)]) {
+            Ok(_) => info!("A \"{}\" mémet mostantól bárki tagelheti!", &filename),
+            Err(_) => (),
+        }
     }
 }
