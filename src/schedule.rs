@@ -7,15 +7,16 @@ use log::info;
 use crate::{UNLOCK_TIME, logger};
 
 pub async fn daily_new_log() {
-    let mut interval = interval(Duration::from_secs(86400));
+    let mut interval = interval(Duration::from_secs(600));
     let mut last = Instant::now();
+
 
     loop {
         interval.tick().await;
         let now = Instant::now();
 
         // Run your task every minute
-        if now.duration_since(last) >= Duration::from_secs(86400) {
+        if now.duration_since(last) >= Duration::from_secs(600) {
             info!("Logfájl név frissítve.");
             logger::setup_logger().unwrap();
             last = now;

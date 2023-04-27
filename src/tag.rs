@@ -8,10 +8,9 @@ use poise::{
 
 use rusqlite::Connection;
 
-use crate::{Data, TAG_SEPARATOR};
+use crate::{Data, TAG_SEPARATOR, schedule};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
-
 
 /// Tagek beállítása egy adott mémre
 #[poise::command(slash_command, dm_only)]
@@ -270,4 +269,19 @@ pub fn check_banned(user_id: &UserId) -> bool {
     }
 
     is_banned
+}
+
+// Feloldja az összes tageletlen mémet publikus tagelésre
+pub fn unlock_all() {
+    let conn = Connection::open("database.db").unwrap();
+
+    let query = "SELECT FileName FROM memes WHERE tags = \'\'";
+    let query2 = "INSERT INTO upforgrabs (FileName) VALUES (?1)";
+    let mut stmt = conn.prepare(&query).unwrap();
+    for row in stmt.query_map([], |row| Ok(row.get(0).unwrap())).unwrap() {
+        let filename: String = row.unwrap();
+
+        conn.execute(&query2, &[("?1", &filename)]).unwrap();
+        info!("A \"{}\" mémet mostantól bárki tagelheti!", &filename);
+    }
 }

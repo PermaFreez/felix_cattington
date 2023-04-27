@@ -11,6 +11,7 @@ mod quicktag;
 mod schedule;
 mod user;
 mod status;
+mod mosttaged;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -26,13 +27,15 @@ const UNLOCK_TIME: u64 = 300;
 #[tokio::main]
 async fn main() {
     logger::setup_logger().unwrap();
-    tokio::spawn(schedule::daily_new_log());
+    //tokio::spawn(schedule::daily_new_log());
     info!("##################");
     info!("Program elindítva!");
     info!("##################");
 
     dotenv().ok();
     create_db().await;
+
+    tag::unlock_all();
 
     let token = env::var("DISCORD_TOKEN").expect("Couldn't find environment variable!");
 
@@ -44,7 +47,8 @@ async fn main() {
             commands: vec![search::search_all(),
                 search::search_random(),
                 tag::tag(),
-                help::help()],
+                help::help(),
+                mosttaged::mosttaged()],
             owners: owners,
             ..Default::default()
         })
