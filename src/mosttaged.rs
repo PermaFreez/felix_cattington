@@ -63,7 +63,7 @@ fn most_used_tags(quantity: u32) -> Vec<(String, usize)> {
 
     tag_count.sort_by(|a, b| b.1.cmp(&a.1));
 
-    for i in quantity as usize..tag_count.len() {
+    for i in quantity as usize..tag_count.len() - 1 {
         tag_count.remove(i);
     }
 
