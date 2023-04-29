@@ -227,7 +227,10 @@ pub async fn check_ownership(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, 
         {
             let query2 = "SELECT AnnounceMessage FROM upforgrabs WHERE FileName = ?1";
             let mut stmt2 = conn.prepare(&query2).unwrap();
-            for row in stmt2.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+            for row in stmt2.query_map(&[("?1", &filename)], |row| Ok(match row.get(0) {
+                Ok(ok) => ok,
+                Err(_) => String::from("0"),
+            })).unwrap() {
                 let announce_message_str: String = row.unwrap();
                 announce_message = announce_message_str.parse().unwrap();
             }
