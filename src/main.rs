@@ -23,7 +23,7 @@ use poise::serenity_prelude::{GatewayIntents, UserId};
 pub struct Data {}
 
 const TAG_SEPARATOR: char = ',';
-const UNLOCK_TIME: u64 = 10;
+const UNLOCK_TIME: u64 = 600;
 
 #[tokio::main]
 async fn main() {
