@@ -12,6 +12,7 @@ mod schedule;
 mod user;
 mod status;
 mod mosttaged;
+mod should_tag;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -22,12 +23,11 @@ use poise::serenity_prelude::{GatewayIntents, UserId};
 pub struct Data {}
 
 const TAG_SEPARATOR: char = ',';
-const UNLOCK_TIME: u64 = 300;
+const UNLOCK_TIME: u64 = 10;
 
 #[tokio::main]
 async fn main() {
     logger::setup_logger().unwrap();
-    //tokio::spawn(schedule::daily_new_log());
     info!("##################");
     info!("Program elindítva!");
     info!("##################");
@@ -48,7 +48,8 @@ async fn main() {
                 search::search_random(),
                 tag::tag(),
                 help::help(),
-                mosttaged::mosttaged()],
+                mosttaged::mosttaged(),
+                should_tag::cimkezendo()],
             owners: owners,
             ..Default::default()
         })
@@ -84,7 +85,7 @@ async fn create_db() {
         "CREATE TABLE IF NOT EXISTS turnoff(UserId varchar(255) PRIMARY KEY);",
         "CREATE TABLE IF NOT EXISTS banned(UserId varchar(255) PRIMARY KEY);",
         "CREATE TABLE IF NOT EXISTS quicktag(UserId varchar(255) PRIMARY KEY, FileName varchar(255));",
-        "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY);"
+        "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY, AnnounceMessage varchar(255));"
     ];
 
     let conn = rusqlite::Connection::open("database.db").unwrap();

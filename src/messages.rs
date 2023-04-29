@@ -132,7 +132,7 @@ impl EventHandler for InformerHandler {
             conn.execute(&query, (&file, &msg.id.to_string(), &msg.link(), String::new(), locked)).unwrap();
             crate::user::add_ownership(&msg.author.id.to_string(), &file);
 
-            tokio::spawn(schedule::unlock_public(file.clone()));
+            tokio::spawn(schedule::unlock_public(file.clone(), ctx.clone()));
 
             if turnoff::is_user_unsubscribed(&msg.author) {
                 return;

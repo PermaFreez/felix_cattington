@@ -50,7 +50,7 @@ impl EventHandler for QuickTagHandler {
                 return;
             }
             
-            if !tag::check_ownership(&user.id, &filename) {
+            if !tag::check_ownership(None, Some(ctx.clone()), &user.id, &filename).await {
                 let embed = CreateEmbed::new().color(color)
                  .title("Hiba")
                  .description("Ezt a mémet nem te küldted, vagy nem létezik!")
@@ -122,7 +122,7 @@ impl EventHandler for QuickTagHandler {
                 return;
             }
 
-            match tag::tag_fn(&msg.author.id, &filename, &msg.content) {
+            match tag::tag_fn(None, Some(ctx.clone()), &msg.author.id, &filename, &msg.content).await {
                 tag::TagResult::Success => {
 
                     let query = "DELETE FROM quicktag WHERE UserId = ?1;";

@@ -3,12 +3,13 @@ use log::info;
 
 use poise::{
     CreateReply,
-    serenity_prelude::{UserId, Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow},
+    serenity_prelude::{UserId, Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle,
+        CreateActionRow, Context as Context2, CacheHttp, ChannelId, MessageId}
 };
 
 use rusqlite::Connection;
 
-use crate::{Data, TAG_SEPARATOR, schedule};
+use crate::{Data, TAG_SEPARATOR};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -24,7 +25,7 @@ pub async fn tag(ctx: Context<'_>,
     let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
         .expect("Color is to be defined in hex!"));
 
-    match tag_fn(&ctx.author().id, &meme, &tagek) {
+    match tag_fn(Some(ctx.clone()), None, &ctx.author().id, &meme, &tagek).await {
         TagResult::Success => {
             let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.", &meme ,&tagek);
 
@@ -101,7 +102,7 @@ pub enum TagResult {
     NotOwned,
 }
 
-pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
+pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &UserId, filename: &String, tags: &String) -> TagResult {
     let conn = Connection::open("database.db").unwrap();
 
     if check_banned(user) {
@@ -121,7 +122,7 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
         }
     }
 
-    if !check_ownership(user, &filename) {
+    if !check_ownership(ctx1, ctx2, user, &filename).await {
         return TagResult::NotOwned;
     }
 
@@ -206,19 +207,49 @@ pub fn tag_fn(user: &UserId, filename: &String, tags: &String) -> TagResult {
     return TagResult::Success;
 }
 
-pub fn check_ownership(user_id: &UserId, filename: &str) -> bool {
+pub async fn check_ownership(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user_id: &UserId, filename: &str) -> bool {
     let conn = Connection::open("database.db").unwrap();
-
-    let query = "SELECT Count(*) FROM upforgrabs WHERE FileName = ?1";
-    let mut stmt = conn.prepare(&query).unwrap();
     let mut count: u8 = 0;
-    for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
-        count = row.unwrap();
+    {
+        let query = "SELECT Count(*) FROM upforgrabs WHERE FileName = ?1";
+        let mut stmt = conn.prepare(&query).unwrap();
+        for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+            count = row.unwrap();
+        }
     }
 
     if count == 1 {
-        let query2 = "DELETE FROM upforgrabs WHERE FileName = ?1";
-        conn.execute(&query2, &[("?1", &filename)]).unwrap();
+
+        let announce_channel_str = env::var("ANNOUNCE_CHANNEL").expect("Couldn't find ANNOUNCE_CHANNEL environment variable!");
+        let announce_channel: u64 = announce_channel_str.parse().unwrap();
+
+        let mut announce_message: u64 = 0;
+        {
+            let query2 = "SELECT AnnounceMessage FROM upforgrabs WHERE FileName = ?1";
+            let mut stmt2 = conn.prepare(&query2).unwrap();
+            for row in stmt2.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+                let announce_message_str: String = row.unwrap();
+                announce_message = announce_message_str.parse().unwrap();
+            }
+        }
+
+        match ctx1 {
+            Some(ctx) => {
+                ctx.http().delete_message(ChannelId::new(announce_channel), MessageId::new(announce_message), None).await.unwrap();
+            },
+            None => {
+                match ctx2 {
+                    Some(ctx) => {
+                        ctx.http().delete_message(ChannelId::new(announce_channel), MessageId::new(announce_message), None).await.unwrap();
+                    },
+                    None => (),
+                }
+            }
+        }
+
+        let query3 = "DELETE FROM upforgrabs WHERE FileName = ?1";
+        conn.execute(&query3, &[("?1", &filename)]).unwrap();
+
         crate::user::add_ownership(&user_id.to_string(), &filename.to_string());
         return true;
     }
