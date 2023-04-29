@@ -233,16 +233,18 @@ pub async fn check_ownership(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, 
             }
         }
 
-        match ctx1 {
-            Some(ctx) => {
-                ctx.http().delete_message(ChannelId::new(announce_channel), MessageId::new(announce_message), None).await.unwrap();
-            },
-            None => {
-                match ctx2 {
-                    Some(ctx) => {
-                        ctx.http().delete_message(ChannelId::new(announce_channel), MessageId::new(announce_message), None).await.unwrap();
-                    },
-                    None => (),
+        if announce_message != 0 {
+            match ctx1 {
+                Some(ctx) => {
+                    ctx.http().delete_message(ChannelId::new(announce_channel), MessageId::new(announce_message), None).await.unwrap();
+                },
+                None => {
+                    match ctx2 {
+                        Some(ctx) => {
+                            ctx.http().delete_message(ChannelId::new(announce_channel), MessageId::new(announce_message), None).await.unwrap();
+                        },
+                        None => (),
+                    }
                 }
             }
         }
