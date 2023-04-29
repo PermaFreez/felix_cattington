@@ -51,7 +51,7 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context2<'a> = poise::Context<'a, Data, Error>;
 
 /// Küld egy olyan mémet, amit cimkézni kell
-#[poise::command(slash_command, dm_only)]
+#[poise::command(slash_command)]
 pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
 
     let conn = Connection::open("database.db").unwrap();
