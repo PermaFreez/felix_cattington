@@ -138,6 +138,15 @@ impl EventHandler for InformerHandler {
                 return;
             }
 
+            let mut filename_str = file.as_str();
+
+            filename_str = match filename_str.char_indices().nth(50) {
+                None => filename_str,
+                Some((idx, _)) => &filename_str[..idx],
+            };
+    
+            file = filename_str.to_string() + "...";
+
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. \
             Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek vesszővel elválasztva>` parancsot!", &file);
 

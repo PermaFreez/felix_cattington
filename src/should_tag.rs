@@ -95,6 +95,15 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
             }
         }
 
+        let mut filename_str = filename.as_str();
+
+        filename_str = match filename_str.char_indices().nth(50) {
+            None => filename_str,
+            Some((idx, _)) => &filename_str[..idx],
+        };
+
+        filename = filename_str.to_string() + "...";
+
         let description = format!("Ezt a mémet még nem cimkézték fel: {}. `/tag {} ...`", &link, &filename);
 
         let embed = CreateEmbed::new().color(color)
