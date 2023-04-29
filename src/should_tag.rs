@@ -24,16 +24,7 @@ pub async fn tagging_request(filename: &String, ctx: Context) {
         }
     }
 
-    let mut filename_str = filename.as_str();
-
-    filename_str = match filename_str.char_indices().nth(50) {
-        None => filename_str,
-        Some((idx, _)) => &filename_str[..idx],
-    };
-
-    let filename2 = filename_str.to_string() + "...";
-
-    let description = format!("Ezt a mémet még nem cimkézték fel: {}. Legyél te az első, aki tesz ez ellen!\n`/tag {} ...`", &link, &filename2);
+    let description = format!("Ezt a mémet még nem cimkézték fel: {}. Legyél te az első, aki tesz ez ellen!\n`/tag {} ...`", &link, &filename);
 
     let embed = CreateEmbed::new().color(color)
      .title("Új cimkézhető mém")
@@ -104,17 +95,6 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
             }
         }
 
-        let mut filename_str = filename.as_str();
-
-        filename_str = match filename_str.char_indices().nth(50) {
-            None => filename_str,
-            Some((idx, _)) => &filename_str[..idx],
-        };
-
-        let button = CreateButton::new(format!("quicktag@{}", &filename)).label("Gyorscimkézés").style(ButtonStyle::Success);
-
-        filename = filename_str.to_string() + "...";
-
         let description = format!("Ezt a mémet még nem cimkézték fel: {}. `/tag {} ...`", &link, &filename);
 
         let embed = CreateEmbed::new().color(color)
@@ -123,6 +103,7 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
          .footer(CreateEmbedFooter::new(footer_text)
          .icon_url(footer_icon));
     
+        let button = CreateButton::new(format!("quicktag@{}", &filename)).label("Gyorscimkézés").style(ButtonStyle::Success);
         let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
         let reply = CreateReply::new().embed(embed).components(components);
         ctx.send(reply).await.unwrap();

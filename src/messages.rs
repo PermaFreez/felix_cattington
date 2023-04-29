@@ -56,8 +56,12 @@ impl EventHandler for InformerHandler {
             }
             
             // Hozzáad egy -n-t a fájlnévhez, hogy ugyanazzal a fájlnévvel több mémet is lehessen kezelni.
-            let filename = &attachment.filename;
+            let mut filename = attachment.filename.clone();
             let mut suffix: u32 = 0;
+
+            if filename.len() > 40 {
+                filename = String::from("too.long");
+            }
 
             let filename_parts: Vec<&str> = filename.split('.').collect::<Vec<&str>>();
 
@@ -137,15 +141,6 @@ impl EventHandler for InformerHandler {
             if turnoff::is_user_unsubscribed(&msg.author) {
                 return;
             }
-
-            let mut filename_str = file.as_str();
-
-            filename_str = match filename_str.char_indices().nth(50) {
-                None => filename_str,
-                Some((idx, _)) => &filename_str[..idx],
-            };
-    
-            file = filename_str.to_string() + "...";
 
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. \
             Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek vesszővel elválasztva>` parancsot!", &file);
