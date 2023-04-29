@@ -111,6 +111,8 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
             Some((idx, _)) => &filename_str[..idx],
         };
 
+        let button = CreateButton::new(format!("quicktag@{}", &filename)).label("Gyorscimkézés").style(ButtonStyle::Success);
+
         filename = filename_str.to_string() + "...";
 
         let description = format!("Ezt a mémet még nem cimkézték fel: {}. `/tag {} ...`", &link, &filename);
@@ -121,7 +123,6 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
          .footer(CreateEmbedFooter::new(footer_text)
          .icon_url(footer_icon));
     
-        let button = CreateButton::new(format!("quicktag@{}", &filename)).label("Gyorscimkézés").style(ButtonStyle::Success);
         let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
         let reply = CreateReply::new().embed(embed).components(components);
         ctx.send(reply).await.unwrap();
