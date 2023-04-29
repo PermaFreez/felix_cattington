@@ -24,7 +24,16 @@ pub async fn tagging_request(filename: &String, ctx: Context) {
         }
     }
 
-    let description = format!("Ezt a mémet még nem cimkézték fel: {}. Legyél te az első, aki tesz ez ellen!\n`/tag {} ...`", &link, &filename);
+    let mut filename_str = filename.as_str();
+
+    filename_str = match filename_str.char_indices().nth(50) {
+        None => filename_str,
+        Some((idx, _)) => &filename_str[..idx],
+    };
+
+    let filename2 = filename_str.to_string() + "...";
+
+    let description = format!("Ezt a mémet még nem cimkézték fel: {}. Legyél te az első, aki tesz ez ellen!\n`/tag {} ...`", &link, &filename2);
 
     let embed = CreateEmbed::new().color(color)
      .title("Új cimkézhető mém")
