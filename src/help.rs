@@ -26,6 +26,10 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
         /search_random <cimkék>\n\
         Pl. /search_random \"cica\"\n\
         Ez ki fogja adni a valamivalami-42.png-t, vagy egy másik mémet, amit \"cicával\" cimkéztek fel.\
+        ```\
+        ```\
+        /cimkezendo\n\
+        Ez a parancs elküld neked egy olyan mémet, amit a tulajdonosa nem cimkézett fel. Ezt a mémet te is fel tudod cimkézni.\
         ```";
 
         let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
