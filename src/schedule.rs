@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{env, time::Duration};
 use poise::serenity_prelude::Context;
 use rusqlite::Connection;
 use tokio::time::sleep;
@@ -10,7 +10,7 @@ use crate::UNLOCK_TIME;
 pub async fn unlock_public(filename: String, ctx: Context) {
     sleep(Duration::from_secs(UNLOCK_TIME)).await;
 
-    let conn = Connection::open("database.db").unwrap();
+    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
 
     let query = "SELECT tags FROM memes WHERE FileName = ?1";
     {

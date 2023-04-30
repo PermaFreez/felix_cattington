@@ -1,3 +1,4 @@
+use std::env;
 use poise::serenity_prelude::{Message, async_trait, EventHandler, Context, Reaction};
 use log::info;
 use rusqlite::Connection;
@@ -8,7 +9,7 @@ fn update_reactions(message: Message) {
 
     let reactions = serde_json::to_string(&message.reactions).unwrap();
 
-    let conn = Connection::open("database.db").unwrap();
+    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
 
     let query = "UPDATE memes SET Reactions = ?1 WHERE Id = ?2;";
 

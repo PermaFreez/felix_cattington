@@ -13,10 +13,12 @@ mod user;
 mod status;
 mod mosttaged;
 mod should_tag;
+mod introduce;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
 use log::info;
+use rusqlite::Connection;
 
 use poise::serenity_prelude::{GatewayIntents, UserId};
 
@@ -85,10 +87,11 @@ async fn create_db() {
         "CREATE TABLE IF NOT EXISTS turnoff(UserId varchar(255) PRIMARY KEY);",
         "CREATE TABLE IF NOT EXISTS banned(UserId varchar(255) PRIMARY KEY);",
         "CREATE TABLE IF NOT EXISTS quicktag(UserId varchar(255) PRIMARY KEY, FileName varchar(255));",
-        "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY, AnnounceMessage varchar(255));"
+        "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY, AnnounceMessage varchar(255));",
+        "CREATE TABLE IF NOT EXISTS introduced(UserId varchar(255) PRIMARY KEY);"
     ];
 
-    let conn = rusqlite::Connection::open("database.db").unwrap();
+    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
 
     for query in queries {
         conn.execute(query, ()).unwrap();

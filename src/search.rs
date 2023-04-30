@@ -1,5 +1,4 @@
 use std::env;
-use dotenv::dotenv;
 
 use poise::{CreateReply, serenity_prelude::{CreateEmbed, CreateEmbedFooter, Color, CreateButton, ButtonStyle, CreateActionRow}};
 use log::info;
@@ -15,14 +14,13 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 #[poise::command(slash_command, dm_only)]
 pub async fn search_all(ctx: Context<'_>,
     #[description = "Kereső tagek"] tagek: String) -> Result<(), Error> {
-        dotenv().ok();
         let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
         let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
 
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
             .expect("Color is to be defined in hex!"));
 
-        let conn = Connection::open("database.db").unwrap();
+            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
 
         let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
         let mut is_banned = false;
@@ -83,14 +81,13 @@ pub async fn search_all(ctx: Context<'_>,
 #[poise::command(slash_command)]
 pub async fn search_random(ctx: Context<'_>,
     #[description = "Kereső tagek"] tagek: String) -> Result<(), Error> {
-        dotenv().ok();
         let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
         let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
 
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
             .expect("Color is to be defined in hex!"));
 
-        let conn = Connection::open("database.db").unwrap();
+        let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
 
         let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
         let mut is_banned = false;
@@ -148,7 +145,7 @@ pub async fn search_random(ctx: Context<'_>,
 }
 
 fn search(tagek: &String, random: bool) -> String {
-    let conn = Connection::open("database.db").unwrap();
+    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
     let tag_vec: Vec<&str> = tagek.split(TAG_SEPARATOR).collect();
 
     let mut memes_vec: Vec<String> = Vec::new();

@@ -7,9 +7,8 @@ use poise::serenity_prelude::{async_trait, EventHandler, Context, Message,
 
 use std::process::Command;
 use rusqlite::Connection;
-use dotenv::dotenv;
 
-use crate::{turnoff, schedule};
+use crate::{turnoff, schedule, introduce};
 pub struct InformerHandler;
 
 #[async_trait]
@@ -27,15 +26,13 @@ impl EventHandler for InformerHandler {
 
         for attachment in &msg.attachments {
 
-            dotenv().ok();
-
             let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
             let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
 
             let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                 .expect("Color is to be defined in hex!"));
 
-            let conn = Connection::open("database.db").unwrap();
+            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
 
             let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
             {
@@ -137,6 +134,8 @@ impl EventHandler for InformerHandler {
             crate::user::add_ownership(&msg.author.id.to_string(), &file);
 
             tokio::spawn(schedule::unlock_public(file.clone(), ctx.clone()));
+
+            introduce::introduce(&msg, &ctx).await;
 
             if turnoff::is_user_unsubscribed(&msg.author) {
                 return;
