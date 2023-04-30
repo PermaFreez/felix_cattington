@@ -103,7 +103,8 @@ pub enum TagResult {
 }
 
 pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &UserId, filename: &String, tags: &String) -> TagResult {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     if check_banned(user) {
         return TagResult::Banned;
@@ -208,7 +209,8 @@ pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &Us
 }
 
 pub async fn check_ownership(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user_id: &UserId, filename: &str) -> bool {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
     let mut count: u8 = 0;
     {
         let query = "SELECT Count(*) FROM upforgrabs WHERE FileName = ?1";
@@ -275,7 +277,8 @@ pub async fn check_ownership(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, 
 }
 
 pub fn check_locked(filename: &str) -> bool {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let query = "SELECT Locked FROM memes WHERE FileName = ?1;";
 
@@ -291,7 +294,8 @@ pub fn check_locked(filename: &str) -> bool {
 }
 
 pub fn check_banned(user_id: &UserId) -> bool {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
     let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
     let mut is_banned = false;
 
@@ -309,7 +313,8 @@ pub fn check_banned(user_id: &UserId) -> bool {
 
 // Feloldja az összes tageletlen mémet publikus tagelésre
 pub fn unlock_all() {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let query = "SELECT FileName FROM memes WHERE tags = \'\'";
     let query2 = "INSERT INTO upforgrabs (FileName) VALUES (?1)";

@@ -49,7 +49,8 @@ pub async fn mosttaged(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 fn most_used_tags(quantity: u32) -> Vec<(String, usize)> {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let mut tag_count: Vec<(String, usize)> = Vec::new();
 

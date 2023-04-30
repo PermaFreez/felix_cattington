@@ -2,7 +2,8 @@ use std::env;
 use rusqlite::Connection;
 
 pub fn add_ownership(user_id: &String, filename: &String) {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let query = "SELECT Memes FROM users WHERE UserId = ?1";
     let mut stmt = conn.prepare(&query).unwrap();

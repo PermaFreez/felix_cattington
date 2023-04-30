@@ -91,7 +91,8 @@ async fn create_db() {
         "CREATE TABLE IF NOT EXISTS introduced(UserId varchar(255) PRIMARY KEY);"
     ];
 
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     for query in queries {
         conn.execute(query, ()).unwrap();

@@ -20,7 +20,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
             ))
         })
         .level(log::LevelFilter::Off)
-        .level_for("memer_rs", log::LevelFilter::Info)
+        .level_for("sir_cattington", log::LevelFilter::Info)
         .chain(std::io::stdout())
         .chain(fern::log_file(log_file)?)
         .apply()?;

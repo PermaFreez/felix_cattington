@@ -20,7 +20,8 @@ pub async fn search_all(ctx: Context<'_>,
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
             .expect("Color is to be defined in hex!"));
 
-            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
 
         let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
         let mut is_banned = false;
@@ -87,7 +88,8 @@ pub async fn search_random(ctx: Context<'_>,
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
             .expect("Color is to be defined in hex!"));
 
-        let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+        let db = env::var("DATABASE").unwrap();
+        let conn = Connection::open(db).unwrap();
 
         let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
         let mut is_banned = false;
@@ -145,7 +147,8 @@ pub async fn search_random(ctx: Context<'_>,
 }
 
 fn search(tagek: &String, random: bool) -> String {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
     let tag_vec: Vec<&str> = tagek.split(TAG_SEPARATOR).collect();
 
     let mut memes_vec: Vec<String> = Vec::new();

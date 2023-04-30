@@ -7,7 +7,8 @@ use log::info;
 
 // Elküldi a tagelhetővé vállt mémeket egy publikus csatornára
 pub async fn tagging_request(filename: &String, ctx: Context) {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
     let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
@@ -54,7 +55,8 @@ type Context2<'a> = poise::Context<'a, Data, Error>;
 #[poise::command(slash_command)]
 pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
 
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
     let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");

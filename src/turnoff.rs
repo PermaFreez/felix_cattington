@@ -13,7 +13,8 @@ pub struct TurnoffHandler;
 #[async_trait]
 impl EventHandler for TurnoffHandler {
     async fn interaction_create(&self, ctx: Context, intc: Interaction) {
-        let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+        let db = env::var("DATABASE").unwrap();
+        let conn = Connection::open(db).unwrap();
         let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
         let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
         let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
@@ -108,7 +109,8 @@ impl EventHandler for TurnoffHandler {
 }
 
 pub fn is_user_unsubscribed(user: &User) -> bool {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
     let query_check = "SELECT Count(*) FROM turnoff  WHERE UserId = ?1;";
 
     let mut stmt = conn.prepare(&query_check).unwrap();

@@ -24,7 +24,8 @@ impl EventHandler for FalsPozHandler {
 
         if split[0] == "fals-poz" {
 
-            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
 
             let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
             let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");

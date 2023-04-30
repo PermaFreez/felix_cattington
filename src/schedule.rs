@@ -10,7 +10,8 @@ use crate::UNLOCK_TIME;
 pub async fn unlock_public(filename: String, ctx: Context) {
     sleep(Duration::from_secs(UNLOCK_TIME)).await;
 
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let query = "SELECT tags FROM memes WHERE FileName = ?1";
     {

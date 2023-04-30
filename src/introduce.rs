@@ -4,7 +4,8 @@ use poise::serenity_prelude::{Context, CreateEmbed, CreateEmbedFooter, Color, Cr
 use rusqlite::Connection;
 
 pub async fn introduce(msg: &Message, ctx: &Context) {
-    let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+    let db = env::var("DATABASE").unwrap();
+    let conn = Connection::open(db).unwrap();
 
     let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
     let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");

@@ -86,7 +86,8 @@ impl EventHandler for QuickTagHandler {
             let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
             message_component.create_response(&ctx.http, reply).await.unwrap();
 
-            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
 
             let query = "DELETE FROM quicktag WHERE UserId = ?1;";
             let query2 = "INSERT INTO quicktag (UserId, FileName) VALUES (?1, ?2);";
@@ -101,7 +102,8 @@ impl EventHandler for QuickTagHandler {
     async fn message(&self, ctx: Context, msg: Message) {
 
         if msg.is_private() {
-            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
 
             let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
             let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");

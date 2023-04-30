@@ -32,7 +32,8 @@ impl EventHandler for InformerHandler {
             let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                 .expect("Color is to be defined in hex!"));
 
-            let conn = Connection::open(env::var("DATABASE").unwrap()).unwrap();
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
 
             let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
             {
