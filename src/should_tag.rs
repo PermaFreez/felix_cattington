@@ -34,12 +34,15 @@ pub async fn tagging_request(attachment_link: &String, filename: &String, ctx: C
      .icon_url(footer_icon));
 
     let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
-    let message = CreateMessage::new().embed(embed).button(button).content(attachment_link);
+    let message = CreateMessage::new().embed(embed).button(button);
+    let message2 = CreateMessage::new().content(attachment_link);
 
     let announce_channel: u64 = env::var("ANNOUNCE_CHANNEL").expect("Couldn't find ANNOUNCE_CHANNEL environment variable!").parse().unwrap();
 
     let channel = ctx.http.get_channel(ChannelId::new(announce_channel)).await.unwrap();
-    let announce_message = channel.guild().unwrap().send_message(&ctx.http, message).await.unwrap();
+    let channel_unwrapped = channel.guild().unwrap();
+    let announce_message = channel_unwrapped.send_message(&ctx.http, message).await.unwrap();
+    channel_unwrapped.send_message(&ctx.http, message2).await.unwrap();
 
     let query = "UPDATE upforgrabs SET AnnounceMessage = ?1 WHERE FileName = ?2";
     conn.execute(&query, (&announce_message.id.to_string(), &filename)).unwrap();
