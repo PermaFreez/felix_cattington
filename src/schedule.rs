@@ -7,7 +7,7 @@ use log::info;
 
 use crate::UNLOCK_TIME;
 
-pub async fn unlock_public(filename: String, ctx: Context) {
+pub async fn unlock_public(attachment_link: String, filename: String, ctx: Context) {
     sleep(Duration::from_secs(UNLOCK_TIME)).await;
 
     let db = env::var("DATABASE").unwrap();
@@ -47,7 +47,7 @@ pub async fn unlock_public(filename: String, ctx: Context) {
     let query4 = "INSERT INTO upforgrabs (FileName) VALUES (?1);";
     conn.execute(&query4, &[("?1", &filename)]).unwrap();
 
-    crate::should_tag::tagging_request(&filename, ctx).await;
+    crate::should_tag::tagging_request(&attachment_link, &filename, ctx).await;
 
     info!("A \"{}\" mémet mostantól bárki tagelheti!", &filename);
 }

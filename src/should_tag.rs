@@ -6,7 +6,7 @@ use rusqlite::Connection;
 use log::info;
 
 // Elküldi a tagelhetővé vállt mémeket egy publikus csatornára
-pub async fn tagging_request(filename: &String, ctx: Context) {
+pub async fn tagging_request(attachment_link: &String, filename: &String, ctx: Context) {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
 
@@ -34,7 +34,7 @@ pub async fn tagging_request(filename: &String, ctx: Context) {
      .icon_url(footer_icon));
 
     let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
-    let message = CreateMessage::new().embed(embed).button(button);
+    let message = CreateMessage::new().embed(embed).button(button).content(attachment_link);
 
     let announce_channel: u64 = env::var("ANNOUNCE_CHANNEL").expect("Couldn't find ANNOUNCE_CHANNEL environment variable!").parse().unwrap();
 

@@ -57,7 +57,7 @@ impl EventHandler for InformerHandler {
             let mut filename = attachment.filename.clone();
             let mut suffix: u32 = 0;
 
-            if filename.len() > 40 {
+            if filename.len() > 70 {
                 filename = String::from("too.long");
             }
 
@@ -134,7 +134,7 @@ impl EventHandler for InformerHandler {
             conn.execute(&query, (&file, &msg.id.to_string(), &msg.link(), String::new(), locked)).unwrap();
             crate::user::add_ownership(&msg.author.id.to_string(), &file);
 
-            tokio::spawn(schedule::unlock_public(file.clone(), ctx.clone()));
+            tokio::spawn(schedule::unlock_public(attachment.url.clone(), file.clone(), ctx.clone()));
 
             introduce::introduce(&msg, &ctx).await;
 
