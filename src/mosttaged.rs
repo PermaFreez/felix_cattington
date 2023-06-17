@@ -30,10 +30,10 @@ pub async fn mosttaged(ctx: Context<'_>) -> Result<(), Error> {
         }
     }
 
-    let description = format!("A tíz leghasználtabb cimke a következő: \n**{}**.", &answer);
+    let description = format!("A tíz leghasználtabb cimke a következő (ennyiszer): \n**{}**.", &answer);
 
     let embed = CreateEmbed::new().color(color)
-        .title("Top Tagek")
+        .title("Top Cimkék")
         .description(&description)
         .footer(CreateEmbedFooter::new(footer_text)
         .icon_url(footer_icon));
@@ -48,6 +48,46 @@ pub async fn mosttaged(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Kiadja az összes eddig használt cimkét
+#[poise::command(slash_command, dm_only)]
+pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
+
+    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
+    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
+
+    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
+        .expect("Color is to be defined in hex!"));
+
+    let tags = most_used_tags(0);
+
+    let mut answer = String::new();
+    for tag in tags {
+        if answer.is_empty() {
+            answer = format!("{} ({})", tag.0, tag.1);
+        } else {
+            answer = format!("{}, {} ({})", answer, tag.0, tag.1);
+        }
+    }
+
+    let description = format!("Eddig ezeket a cimkéket használták (ennyiszer): \n**{}**.", &answer);
+
+    let embed = CreateEmbed::new().color(color)
+        .title("Cimkék")
+        .description(&description)
+        .footer(CreateEmbedFooter::new(footer_text)
+        .icon_url(footer_icon));
+
+    let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+    let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
+    let reply = CreateReply::new().embed(embed).components(components);
+
+    ctx.send(reply).await.unwrap();
+    info!("{} használta a /alltagged parancsot!", &ctx.author().id);
+
+    Ok(())
+}
+
+// quantity = 0 -> összes
 fn most_used_tags(quantity: u32) -> Vec<(String, usize)> {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
@@ -64,7 +104,9 @@ fn most_used_tags(quantity: u32) -> Vec<(String, usize)> {
 
     tag_count.sort_by(|a, b| b.1.cmp(&a.1));
 
-    println!("{}", tag_count.len());
+    if quantity == 0 {
+        return tag_count;
+    }
 
     let mut quantity_vec: Vec<(String, usize)> = Vec::new();
 

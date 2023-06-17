@@ -51,6 +51,7 @@ async fn main() {
                 tag::tag(),
                 help::help(),
                 mosttaged::mosttaged(),
+                mosttaged::alltagged(),
                 should_tag::cimkezendo()],
             owners: owners,
             ..Default::default()
