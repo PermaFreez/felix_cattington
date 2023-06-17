@@ -1,7 +1,7 @@
 use std::env;
 use log::info;
 
-use poise::{CreateReply, serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow}};
+use poise::{CreateReply, serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow, CreateMessage}};
 
 use rusqlite::Connection;
 
@@ -60,16 +60,26 @@ pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
 
     let tags = most_used_tags(0);
 
-    let mut answer = String::new();
-    for tag in tags {
-        if answer.is_empty() {
-            answer = format!("{} ({})", tag.0, tag.1);
-        } else {
-            answer = format!("{}, {} ({})", answer, tag.0, tag.1);
+    let mut answers: Vec<String> = Vec::new(); {
+        let mut answer = String::new();
+        for tag in tags {
+            if answer.len() > 1800 {
+                answers.push(answer);
+                answer = String::new();
+            }
+            if answer.is_empty() {
+                answer = format!("{} ({})", tag.0, tag.1);
+            } else {
+                answer = format!("{}, {} ({})", answer, tag.0, tag.1);
+            }
         }
     }
 
-    let description = format!("Eddig ezeket a cimkéket használták (ennyiszer): \n**{}**.", &answer);
+    let description = format!("Eddig ezeket a cimkéket használták (ennyiszer):");
+    let mut cimkek: Vec<String> = Vec::new(); 
+    for answer in answers {
+        cimkek.push(format!("```\n{}\n```", &answer));
+    }
 
     let embed = CreateEmbed::new().color(color)
         .title("Cimkék")
@@ -81,7 +91,15 @@ pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
     let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
     let reply = CreateReply::new().embed(embed).components(components);
 
+    let mut tag_replys: Vec<CreateReply> = Vec::new();
+    for cimke in cimkek {
+        tag_replys.push(CreateReply::new().content(cimke));
+    }
+
     ctx.send(reply).await.unwrap();
+    for tag_reply in tag_replys {
+        ctx.send(tag_reply).await.unwrap();
+    }
     info!("{} használta a /alltagged parancsot!", &ctx.author().id);
 
     Ok(())
