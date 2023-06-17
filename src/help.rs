@@ -30,6 +30,14 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
         ```\
         /cimkezendo\n\
         Ez a parancs elküld neked egy olyan mémet, amit a tulajdonosa nem cimkézett fel. Ezt a mémet te is fel tudod cimkézni.\
+        ```\
+        ```\
+        /mosttagged\n\
+        Ez a parancs kiadja a 10 leggyakrabban használt cimkét.\
+        ```\
+        ```\
+        /alltagged\n\
+        Ez a parancs kiadja az összes eddig használt cimkét.\
         ```";
 
         let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
