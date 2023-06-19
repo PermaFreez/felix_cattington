@@ -19,7 +19,7 @@ impl Help {
         let mut description = format!("**A bot jelenleg {} parancsot támogat:**", self.commands.len());
 
         for command in &self.commands {
-            let command_description = format!("```{} {}\n{}\n{}```", 
+            let command_description = format!("```{}{}\n{}\n{}```", 
             command.name, command.render_parameters(), command.render_example(), command.description.clone());
             description = description + command_description.as_str();
         }
@@ -76,7 +76,7 @@ impl Command {
     fn render_example(&self) -> String {
         match &self.example {
             Some(example) => {
-                format!("{}\n", example)
+                format!("{}", example)
             },
             None => String::new(),
         }
