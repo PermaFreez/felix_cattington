@@ -1,4 +1,4 @@
-use std::{env, fs, path};
+use std::{env, fs};
 use log::info;
 
 use poise::serenity_prelude::{async_trait, EventHandler, Context, Message,
@@ -77,7 +77,17 @@ impl EventHandler for InformerHandler {
                 let memedir = String::from("memes/");
                 fs::create_dir_all(&memedir).unwrap();
                 let path: String = memedir + &file;
-                if !path::Path::new(&path).exists() {
+
+                let mut filenamecount: i8 = 0;
+                {
+                    let query = "SELECT Count(*) FROM memes WHERE FileName = ?1";
+                    let mut stmt = conn.prepare(&query).unwrap();
+                    for row in stmt.query_map(&[("?1", &file)], |row| Ok(row.get(0).unwrap())).unwrap() {
+                        filenamecount = row.unwrap();
+                    };
+                };
+
+                if filenamecount == 0 {
                     fs::write(&path, &attachment.download().await.unwrap()).expect("Couldn't write to file!");
                     let out = Command::new("python3")
                         .arg("dedup.py")

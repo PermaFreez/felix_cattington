@@ -1,7 +1,7 @@
 use std::env;
 use log::info;
 
-use poise::{CreateReply, serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow, CreateMessage}};
+use poise::{CreateReply, serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow}};
 
 use rusqlite::Connection;
 
