@@ -73,6 +73,7 @@ pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
                 answer = format!("{}, {} ({})", answer, tag.0, tag.1);
             }
         }
+        answers.push(answer);
     }
 
     let description = format!("Eddig ezeket a cimkéket használták (ennyiszer):");
@@ -106,7 +107,7 @@ pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 // quantity = 0 -> összes
-fn most_used_tags(quantity: u32) -> Vec<(String, usize)> {
+fn most_used_tags(mut quantity: u32) -> Vec<(String, usize)> {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
 
@@ -124,6 +125,10 @@ fn most_used_tags(quantity: u32) -> Vec<(String, usize)> {
 
     if quantity == 0 {
         return tag_count;
+    }
+
+    if tag_count.len() < quantity as usize {
+        quantity = tag_count.len() as u32;
     }
 
     let mut quantity_vec: Vec<(String, usize)> = Vec::new();

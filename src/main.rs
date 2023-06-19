@@ -14,6 +14,7 @@ mod status;
 mod mosttaged;
 mod should_tag;
 mod introduce;
+mod tagop;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -52,7 +53,8 @@ async fn main() {
                 help::help(),
                 mosttaged::mosttaged(),
                 mosttaged::alltagged(),
-                should_tag::cimkezendo()],
+                should_tag::cimkezendo(),
+                tagop::gettags()],
             owners: owners,
             ..Default::default()
         })
