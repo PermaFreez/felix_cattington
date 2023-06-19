@@ -76,7 +76,7 @@ impl Command {
     fn render_example(&self) -> String {
         match &self.example {
             Some(example) => {
-                format!("{}", example)
+                format!("{}\n", example)
             },
             None => String::new(),
         }
