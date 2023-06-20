@@ -66,6 +66,7 @@ async fn main() {
             .event_handler(turnoff::TurnoffHandler)
             .event_handler(belep::BelepHandler)
             .event_handler(quicktag::QuickTagHandler)
+            .event_handler(quicktag::advanced::AdvancedHandler)
             .status(status::set_online_status())
             .activity(status::set_custom_status().unwrap())
         })
@@ -91,7 +92,8 @@ async fn create_db() {
         "CREATE TABLE IF NOT EXISTS banned(UserId varchar(255) PRIMARY KEY);",
         "CREATE TABLE IF NOT EXISTS quicktag(UserId varchar(255) PRIMARY KEY, FileName varchar(255));",
         "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY, AnnounceMessage varchar(255));",
-        "CREATE TABLE IF NOT EXISTS introduced(UserId varchar(255) PRIMARY KEY);"
+        "CREATE TABLE IF NOT EXISTS introduced(UserId varchar(255) PRIMARY KEY);",
+        "CREATE TABLE IF NOT EXISTS templates(Name varchar(255) PRIMARY KEY);"
     ];
 
     let db = env::var("DATABASE").unwrap();

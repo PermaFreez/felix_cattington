@@ -88,13 +88,13 @@ impl EventHandler for TurnoffHandler {
                 let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
                 let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
                     .expect("Color is to be defined in hex!"));
-                let description = "Sikeresen visszairatkoztál a botra!";
+                let description = "Sikeresen feliratkoztál a botra!";
 
                 conn.execute(query_off, &[("?1", &user_id)]).unwrap();
                 
                 conn.execute(query_off, &[("?1", &user_id)]).unwrap();
                 let embed = CreateEmbed::new().color(color)
-                    .title("Visszairatkozva")
+                    .title("Feliratkozva")
                     .description(description)
                     .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
 

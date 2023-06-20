@@ -1,7 +1,9 @@
+pub mod advanced;
+
 use std::env;
 use log::info;
 
-use poise::serenity_prelude::EventHandler;
+use poise::serenity_prelude::{EventHandler, CreateActionRow, CreateSelectMenu, CreateSelectMenuKind, CreateSelectMenuOption};
 use poise::serenity_prelude::{async_trait, Context, Interaction,
     User, CreateEmbed, CreateEmbedFooter, Message,
     Color, CreateInteractionResponse, CreateInteractionResponseMessage, 
@@ -23,9 +25,10 @@ impl EventHandler for QuickTagHandler {
             None => return,
         };
 
-        let user: User = message_component.user.clone();
-
         if message_component.data.custom_id.matches("quicktag").count() == 1 {
+
+            let user: User = message_component.user.clone();
+
             let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
             let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
         
@@ -34,7 +37,7 @@ impl EventHandler for QuickTagHandler {
 
             let button_id: Vec<&str> = message_component.data.custom_id.split('@').collect();
 
-            let filename= button_id[1];
+            let filename = button_id[1];
 
             let user_id = user.id.to_string();
 
@@ -75,25 +78,34 @@ impl EventHandler for QuickTagHandler {
                 return;
             }
 
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
+
             let description = format!("Aktiváltad a **`{}`** mém gyorscimkézését! \
-            A következő üzeneted összes szava regisztrálva lesz, mint tag!", &filename);
+            Először válaszd ki a mém formátumát, majd a következő üzenetedben add meg a szereplőjét!", &filename);
 
             let embed = CreateEmbed::new().color(color)
                  .title("Gyorscimkézés aktiválva")
                  .description(&description)
                  .footer(CreateEmbedFooter::new(&footer_text)
                  .icon_url(&footer_icon));
-            let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
+
+            let mut menu_options: Vec<CreateSelectMenuOption> = Vec::new();
+            {
+                let query = "SELECT * FROM templates";
+                let mut stmt = conn.prepare(query).unwrap();
+                for row in stmt.query_map([], |row| Ok(row.get(0).unwrap())).unwrap() {
+                    let template: String = row.unwrap();
+                    menu_options.push(CreateSelectMenuOption::new(&template, &template));
+                }
+            }
+            let drop_down = CreateSelectMenu::new(format!("droptag@{}", &filename),
+                CreateSelectMenuKind::String { options: menu_options });
+            let action_row = CreateActionRow::SelectMenu(drop_down);
+                 
+            let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed)
+                .components(vec![action_row]));
             message_component.create_response(&ctx.http, reply).await.unwrap();
-
-            let db = env::var("DATABASE").unwrap();
-            let conn = Connection::open(db).unwrap();
-
-            let query = "DELETE FROM quicktag WHERE UserId = ?1;";
-            let query2 = "INSERT INTO quicktag (UserId, FileName) VALUES (?1, ?2);";
-
-            conn.execute(query, &[("?1", &user_id)]).unwrap();
-            conn.execute(query2, (&user_id, &filename)).unwrap();
 
             info!("{} aktiválta a {} gyorscimkézését!", user_id, &filename);
         }
@@ -124,7 +136,18 @@ impl EventHandler for QuickTagHandler {
                 return;
             }
 
-            match tag::tag_fn(None, Some(ctx.clone()), &msg.author.id, &filename, &msg.content).await {
+            let mut prev_tags = String::new();
+            {
+                let query = "SELECT Tags From memes WHERE FileName = ?1";
+                let mut stmt = conn.prepare(query).unwrap();
+                for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+                    prev_tags = row.unwrap();
+                }
+            }
+
+            let newtags = format!("{}, {}", prev_tags, &msg.content);
+            println!("{}", newtags);
+            match tag::tag_fn(None, Some(ctx.clone()), &msg.author.id, &filename, &newtags).await {
                 tag::TagResult::Success => {
 
                     let query = "DELETE FROM quicktag WHERE UserId = ?1;";
@@ -132,7 +155,6 @@ impl EventHandler for QuickTagHandler {
                     conn.execute(query, params![msg.author.id.to_string().as_str()]).unwrap();
 
                     let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.", &filename, &msg.content);
-
 
                     let embed = CreateEmbed::new().color(color)
                     .title("Tagek elmentve")

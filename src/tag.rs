@@ -163,7 +163,7 @@ pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &Us
         if tags.is_empty() {
             tags = current_tag.to_string();
         } else {
-            tags = tags + " " + current_tag;
+            tags = tags + ", " + current_tag;
         }
         
         let query3 = "SELECT COUNT(*) FROM tags WHERE Tag = ?1;";
