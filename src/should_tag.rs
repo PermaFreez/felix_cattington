@@ -25,16 +25,16 @@ pub async fn tagging_request(attachment_link: &String, filename: &String, ctx: C
         }
     }
 
-    let description = format!("Ezt a mémet még nem cimkézték fel: {}. Legyél te az első, aki tesz ez ellen!\n`/tag {} ...`", &link, &filename);
+    
+    let description = format!("Ezt a mémet még nem cimkézték fel: {}.\n`/tag {} ...`", &link, &filename);
 
     let embed = CreateEmbed::new().color(color)
-     .title("Új cimkézhető mém")
+     .title("Cimkézhető mém")
      .description(&description)
      .footer(CreateEmbedFooter::new(footer_text)
      .icon_url(footer_icon));
 
-    let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
-    let message = CreateMessage::new().embed(embed).button(button);
+    let message = CreateMessage::new().embed(embed);
     let message2 = CreateMessage::new().content(attachment_link);
 
     let announce_channel: u64 = env::var("ANNOUNCE_CHANNEL").expect("Couldn't find ANNOUNCE_CHANNEL environment variable!").parse().unwrap();

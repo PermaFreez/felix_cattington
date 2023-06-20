@@ -1,7 +1,7 @@
 use std::env;
 use log::info;
 
-use poise::serenity_prelude::{EventHandler, SelectMenuOption};
+use poise::serenity_prelude::EventHandler;
 use poise::serenity_prelude::{async_trait, Context, Interaction,
     User, CreateEmbed, CreateEmbedFooter,
     Color, CreateInteractionResponse, CreateInteractionResponseMessage,
@@ -96,7 +96,7 @@ impl EventHandler for AdvancedHandler {
                     conn.execute(query2, (&user_id, &filename)).unwrap();
 
                     let description = format!("Sikeresen beállítottad a **`{}`** mém formátumát erre: **{}**! \
-                    Most a Gyorscimkézés második szakasza következik, így \
+                    Most a gyorscimkézés második szakasza következik, így \
                     a következő üzeneted összes vesszővel elválasztott része regisztrálva lesz mint cimke!", &filename, &droptag);
         
                     let embed = CreateEmbed::new().color(color)
@@ -107,6 +107,7 @@ impl EventHandler for AdvancedHandler {
 
                     let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
                     message_component.create_response(&ctx.http, reply).await.unwrap();
+                    message_component.message.delete(&ctx.http).await.unwrap();
                     info!("{} fájl formátuma: {}", &filename, &droptag);
                 }
                 _ => (),

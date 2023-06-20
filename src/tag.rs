@@ -103,6 +103,7 @@ pub enum TagResult {
 }
 
 pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &UserId, filename: &String, tags: &String) -> TagResult {
+    println!("tagek: {}", tags);
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
 
@@ -159,6 +160,10 @@ pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &Us
     let mut tags = String::new();
     for tag in 0..tag_split.len() {
         let current_tag = tag_split[tag].trim();
+
+        if current_tag.is_empty() {
+            continue;
+        }
 
         if tags.is_empty() {
             tags = current_tag.to_string();

@@ -1,4 +1,5 @@
 pub mod advanced;
+pub mod regtemp;
 
 use std::env;
 use log::info;
@@ -101,10 +102,12 @@ impl EventHandler for QuickTagHandler {
             }
             let drop_down = CreateSelectMenu::new(format!("droptag@{}", &filename),
                 CreateSelectMenuKind::String { options: menu_options });
-            let action_row = CreateActionRow::SelectMenu(drop_down);
+            let select_menu = CreateActionRow::SelectMenu(drop_down);
+            let button = CreateButton::new(format!("notemplate@{}", &filename)).label("Nincs listázva").style(ButtonStyle::Primary);
+            let buttons = CreateActionRow::Buttons(vec![button]);
                  
             let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed)
-                .components(vec![action_row]));
+                .components(vec![select_menu, buttons]));
             message_component.create_response(&ctx.http, reply).await.unwrap();
 
             info!("{} aktiválta a {} gyorscimkézését!", user_id, &filename);
@@ -145,7 +148,11 @@ impl EventHandler for QuickTagHandler {
                 }
             }
 
-            let newtags = format!("{}, {}", prev_tags, &msg.content);
+            let mut newtags = msg.content.clone();
+            if !prev_tags.is_empty() {
+                newtags = format!("{}, {}", prev_tags, &msg.content);
+            }
+            
             println!("{}", newtags);
             match tag::tag_fn(None, Some(ctx.clone()), &msg.author.id, &filename, &newtags).await {
                 tag::TagResult::Success => {
