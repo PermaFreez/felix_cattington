@@ -79,8 +79,6 @@ impl EventHandler for RegTempHandler {
                     message = format!("{} {}", link, message);
                 }
             }
-
-            let message = format!("{} mém regisztrálása kérelmezve {} által!", &filename, user.id);
             
             write!(file, "\n{}", message).unwrap();
 

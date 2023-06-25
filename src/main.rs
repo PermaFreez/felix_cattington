@@ -96,7 +96,7 @@ async fn create_db() {
         "CREATE TABLE IF NOT EXISTS quicktag(UserId varchar(255) PRIMARY KEY, FileName varchar(255));",
         "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY, AnnounceMessage varchar(255));",
         "CREATE TABLE IF NOT EXISTS introduced(UserId varchar(255) PRIMARY KEY);",
-        "CREATE TABLE IF NOT EXISTS templates(Name varchar(255) PRIMARY KEY, Example varchar(255));",
+        "CREATE TABLE IF NOT EXISTS templates(Name varchar(255) PRIMARY KEY, Example varchar(255) NOT NULL);",
     ];
 
     let db = env::var("DATABASE").unwrap();

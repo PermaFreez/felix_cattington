@@ -15,7 +15,7 @@ pub async fn formatumok(ctx: Context2<'_>) -> Result<(), Error> {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).expect("Failed to open database!");
 
-    let query = "SELECT * FROM templates";
+    let query = "SELECT Name, Example FROM templates";
 
     let mut description = String::new();
     {
@@ -23,9 +23,9 @@ pub async fn formatumok(ctx: Context2<'_>) -> Result<(), Error> {
         for row in stmt.query_map([], |row| Ok((row.get(0).unwrap(), row.get(1).unwrap()))).unwrap() {
             let template: (String, String) = row.unwrap();
             if description.is_empty() {
-                description = format!("`{}` {}", template.1, template.0);
+                description = format!("`{}` {}", template.0, template.1);
             } else {
-                description = format!("{}\n`{}` {}", description, template.1, template.0);   
+                description = format!("{}\n`{}` {}", description, template.0, template.1);   
             }
         }
     }
