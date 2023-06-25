@@ -3,13 +3,13 @@ use log::info;
 
 use poise::serenity_prelude::{EventHandler, CreateActionRow};
 use poise::serenity_prelude::{async_trait, Context, Interaction,
-    User, CreateEmbed, CreateEmbedFooter,
-    Color, CreateInteractionResponse, CreateInteractionResponseMessage, 
+    User, CreateInteractionResponse, CreateInteractionResponseMessage, 
     CreateButton, ButtonStyle
 };
 
 use rusqlite::Connection;
 
+use crate::response::getembed;
 pub struct RegTempHandler;
 
 #[async_trait]
@@ -24,12 +24,6 @@ impl EventHandler for RegTempHandler {
         if message_component.data.custom_id.matches("notemplate").count() == 1 {
             let user: User = message_component.user.clone();
             let user_id = user.id.to_string();
-            
-            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-        
-            let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-                .expect("Color is to be defined in hex!"));
 
             let button_id: Vec<&str> = message_component.data.custom_id.split('@').collect();
 
@@ -39,11 +33,7 @@ impl EventHandler for RegTempHandler {
             Ezt leszámítva most a gyorscimkézés második szakasza következik, így \
             a következő üzeneted összes vesszővel elválasztott része regisztrálva lesz mint cimke!";
 
-            let embed = CreateEmbed::new().color(color)
-                 .title("Formátum nem került regisztrálásra")
-                 .description(description)
-                 .footer(CreateEmbedFooter::new(&footer_text)
-                 .icon_url(&footer_icon));
+            let embed = getembed("Formátum nem került regisztrálásra", description);
 
             let button = CreateButton::new(format!("newtemplate@{}", &filename)).label("Listázás kérése").style(ButtonStyle::Primary);
             let buttons = CreateActionRow::Buttons(vec![button]);
@@ -65,12 +55,6 @@ impl EventHandler for RegTempHandler {
         if message_component.data.custom_id.matches("newtemplate").count() == 1 {
             let user: User = message_component.user.clone();
 
-            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-        
-            let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-                .expect("Color is to be defined in hex!"));
-
             let button_id: Vec<&str> = message_component.data.custom_id.split('@').collect();
 
             let filename = button_id[1];
@@ -84,6 +68,18 @@ impl EventHandler for RegTempHandler {
                 Err(_) => return,
             };
 
+            let db = env::var("DATABASE").unwrap();
+            let conn = Connection::open(db).unwrap();
+            let query = "SELECT Link FROM memes WHERE FileName = ?1";
+            let mut message = format!("mém regisztrálása kérelmezve {} által!", user.id); 
+            {
+                let mut stmt = conn.prepare(query).unwrap();
+                for row in stmt.query_map(&[("?1", &filename)], |row| Ok(row.get(0).unwrap())).unwrap() {
+                    let link: String = row.unwrap();
+                    message = format!("{} {}", link, message);
+                }
+            }
+
             let message = format!("{} mém regisztrálása kérelmezve {} által!", &filename, user.id);
             
             write!(file, "\n{}", message).unwrap();
@@ -93,11 +89,7 @@ impl EventHandler for RegTempHandler {
             let description = format!("Beküldted a {} mémet formátum regisztrálásra! \
             Az adminisztrátor meg fog próbálni nevet adni ennek a típusú mémnek. A következő üzenetre érvényes a gyorscimkézés.", &filename);
 
-            let embed = CreateEmbed::new().color(color)
-                 .title("Beküldve regisztrálásra")
-                 .description(description)
-                 .footer(CreateEmbedFooter::new(&footer_text)
-                 .icon_url(&footer_icon));
+            let embed = getembed("Beküldve regisztrálásra", &description);
 
             let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
             message_component.create_response(&ctx.http, reply).await.unwrap();

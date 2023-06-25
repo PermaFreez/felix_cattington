@@ -2,11 +2,13 @@ use std::env;
 use log::info;
 
 use poise::serenity_prelude::{async_trait, EventHandler, Context, Interaction,
-    Color, User, CreateEmbed, CreateEmbedFooter, CreateInteractionResponse,
+    User, CreateInteractionResponse,
     CreateInteractionResponseMessage, CreateButton, ButtonStyle
 };
 
 use rusqlite::Connection;
+
+use crate::response::getembed;
 
 pub struct TurnoffHandler;
 
@@ -15,10 +17,6 @@ impl EventHandler for TurnoffHandler {
     async fn interaction_create(&self, ctx: Context, intc: Interaction) {
         let db = env::var("DATABASE").unwrap();
         let conn = Connection::open(db).unwrap();
-        let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
-        let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
-        let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-            .expect("Color is to be defined in hex!"));
 
         let message_component = match intc.message_component() {
             Some(some) => some,
@@ -41,11 +39,8 @@ impl EventHandler for TurnoffHandler {
         }
 
         if is_banned {
-            let embed = CreateEmbed::new().color(color)
-            .title("Kitiltás")
-            .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
-            .footer(CreateEmbedFooter::new(&footer_text)
-            .icon_url(&footer_icon));
+            let embed = getembed("Kitiltás",
+            "Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.");
             let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
 
             message_component.create_response(&ctx.http, reply).await.unwrap();
@@ -64,11 +59,8 @@ impl EventHandler for TurnoffHandler {
                 
                 conn.execute(query_on, &[("?1", &user_id)]).unwrap();
                 
-                let embed = CreateEmbed::new().color(color)
-                    .title("Leiratkozva")
-                    .description(description)
-                    .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
-                
+                let embed = getembed("Leiratkozva", description);
+
                 let button = CreateButton::new("visszairatkozas").label("Visszairatkozás").style(ButtonStyle::Success);
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));
 
@@ -84,19 +76,12 @@ impl EventHandler for TurnoffHandler {
             let query_off = "DELETE FROM turnoff WHERE UserId = ?1;";
             
             if is_user_unsubscribed(&user) {
-                let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
-                let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
-                let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-                    .expect("Color is to be defined in hex!"));
                 let description = "Sikeresen feliratkoztál a botra!";
 
                 conn.execute(query_off, &[("?1", &user_id)]).unwrap();
                 
                 conn.execute(query_off, &[("?1", &user_id)]).unwrap();
-                let embed = CreateEmbed::new().color(color)
-                    .title("Feliratkozva")
-                    .description(description)
-                    .footer(CreateEmbedFooter::new(footer_text).icon_url(footer_icon));
+                let embed = getembed("Feliratkozva", description);
 
                 let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed).button(button));

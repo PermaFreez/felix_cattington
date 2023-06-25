@@ -1,17 +1,11 @@
 use std::env;
 use log::info;
-use poise::serenity_prelude::{Context, CreateEmbed, CreateEmbedFooter, Color, CreateButton, ButtonStyle, CreateMessage, Message};
+use poise::serenity_prelude::{Context, CreateEmbed, CreateButton, ButtonStyle, CreateMessage, Message};
 use rusqlite::Connection;
 
 pub async fn introduce(msg: &Message, ctx: &Context) {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
-
-    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
-    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
-
-    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-        .expect("Color is to be defined in hex!"));
 
     let mut count: u32 = 0;
     {
@@ -29,10 +23,7 @@ pub async fn introduce(msg: &Message, ctx: &Context) {
 
         let description = "**Kérlek nézd meg ezt a rövid videót, hogy könnyedén megértsed, miért írt neked ez a bot!**";
 
-        let embed: CreateEmbed = CreateEmbed::new().color(color)
-            .title("Bemutatkozó")
-            .description(description)
-            .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
+        let embed: CreateEmbed = crate::response::getembed("Bemutatkozó", description);
 
         let button = CreateButton::new("visszairatkozas").label("Feliratkozás").style(ButtonStyle::Success);
 

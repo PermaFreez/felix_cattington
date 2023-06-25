@@ -1,7 +1,9 @@
 use std::env;
-use poise::{CreateReply, serenity_prelude::{CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle,
-    Color, CreateMessage, Context, ChannelId, CreateActionRow}
+use poise::{CreateReply, serenity_prelude::{CreateButton, ButtonStyle,
+    CreateMessage, Context, ChannelId, CreateActionRow}
 };
+
+use crate::response::getembed;
 use rusqlite::Connection;
 use log::info;
 
@@ -9,12 +11,6 @@ use log::info;
 pub async fn tagging_request(attachment_link: &String, filename: &String, ctx: Context) {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
-
-    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-
-    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-        .expect("Color is to be defined in hex!"));
 
     let query = "SELECT Link FROM memes WHERE FileName = ?1";
     let mut link = String::new();
@@ -25,19 +21,13 @@ pub async fn tagging_request(attachment_link: &String, filename: &String, ctx: C
         }
     }
 
-    
     let description = format!("Ezt a mémet még nem cimkézték fel: {}.\n`/tag {} ...`", &link, &filename);
 
-    let embed = CreateEmbed::new().color(color)
-     .title("Cimkézhető mém")
-     .description(&description)
-     .footer(CreateEmbedFooter::new(footer_text)
-     .icon_url(footer_icon));
-
+    let embed = getembed("Cimkézhető mém", &description);
     let message = CreateMessage::new().embed(embed);
     let message2 = CreateMessage::new().content(attachment_link);
 
-    let announce_channel: u64 = env::var("ANNOUNCE_CHANNEL").expect("Couldn't find ANNOUNCE_CHANNEL environment variable!").parse().unwrap();
+    let announce_channel: u64 = env::var("ANNOUNCE_CHANNEL").expect("Couldn't find environment variable!").parse().unwrap();
 
     let channel = ctx.http.get_channel(ChannelId::new(announce_channel)).await.unwrap();
     let channel_unwrapped = channel.guild().unwrap();
@@ -61,12 +51,6 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
 
-    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-
-    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-        .expect("Color is to be defined in hex!"));
-
     let query = "SELECT FileName FROM upforgrabs";
     let mut filename = String::new();
     {
@@ -80,11 +64,7 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
     if filename.is_empty() {
         let description = format!("Sajnos, vagy nem sajnos már minden mém fel van cimkézve.");
 
-        let embed = CreateEmbed::new().color(color)
-         .title("Nincs cimkézendő mém")
-         .description(&description)
-         .footer(CreateEmbedFooter::new(footer_text)
-         .icon_url(footer_icon));
+        let embed = getembed("Nincs cimkézendő mém", &description);
     
         let reply = CreateReply::new().embed(embed);
         ctx.send(reply).await.unwrap();
@@ -102,11 +82,7 @@ pub async fn cimkezendo(ctx: Context2<'_>) -> Result<(), Error> {
 
         let description = format!("Ezt a mémet még nem cimkézték fel: {}. `/tag {} ...`", &link, &filename);
 
-        let embed = CreateEmbed::new().color(color)
-         .title("Cimkézhető mém")
-         .description(&description)
-         .footer(CreateEmbedFooter::new(footer_text)
-         .icon_url(footer_icon));
+        let embed = getembed("Cimkézhető mém", &description);
     
         let button = CreateButton::new(format!("quicktag@{}", &filename)).label("Gyorscimkézés").style(ButtonStyle::Success);
         let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];

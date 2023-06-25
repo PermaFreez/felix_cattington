@@ -3,12 +3,13 @@ use log::info;
 
 use poise::serenity_prelude::EventHandler;
 use poise::serenity_prelude::{async_trait, Context, Interaction,
-    User, CreateEmbed, CreateEmbedFooter,
-    Color, CreateInteractionResponse, CreateInteractionResponseMessage,
+    User, CreateInteractionResponse, CreateInteractionResponseMessage,
     ComponentInteractionDataKind
 };
 
 use rusqlite::Connection;
+
+use crate::response::getembed;
 
 use crate::tag;
 
@@ -39,22 +40,13 @@ impl EventHandler for AdvancedHandler {
             let db = env::var("DATABASE").unwrap();
             let conn = Connection::open(db).unwrap();
 
-            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-        
-            let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-                .expect("Color is to be defined in hex!"));
-
             let drop_id: Vec<&str> = message_component.data.custom_id.split('@').collect();
 
             let filename = drop_id[1];
 
             if tag::check_banned(&message_component.user.id) {
-                let embed = CreateEmbed::new().color(color)
-                .title("Kitiltás")
-                .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
-                .footer(CreateEmbedFooter::new(&footer_text)
-                .icon_url(&footer_icon));
+                let embed = getembed("Kitiltás",
+                "Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.");
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
                 message_component.create_response(&ctx.http, reply).await.unwrap();
                 info!("{} tiltva van, de megpróbált írni a botnak!", user_id);
@@ -62,11 +54,7 @@ impl EventHandler for AdvancedHandler {
             }
 
             if !tag::check_ownership(None, Some(ctx.clone()), &user.id, &filename).await {
-                let embed = CreateEmbed::new().color(color)
-                 .title("Hiba")
-                 .description("Ezt a mémet nem te küldted, vagy nem létezik!")
-                 .footer(CreateEmbedFooter::new(&footer_text)
-                 .icon_url(&footer_icon));
+                let embed = getembed("Hiba", "Ezt a mémet nem te küldted, vagy nem létezik!");
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
                 message_component.create_response(&ctx.http, reply).await.unwrap();
                 info!("{} megpróbált egy nem létező/nem saját mémet tagelni ({})", user_id, &filename);
@@ -74,12 +62,8 @@ impl EventHandler for AdvancedHandler {
             }
 
             if tag::check_locked(&filename) {
-                let embed = CreateEmbed::new().color(color)
-                 .title("Zárolt mém")
-                 .description("Ez a mém zárolva van. Ez leggyakrabban amiatt van, mert nem te vagy az első aki beküldte. 
-                    Amennyiben a mém nem egy repost, a feltöltési értesítő alatt feloldhatod a zárolását.")
-                 .footer(CreateEmbedFooter::new(&footer_text)
-                 .icon_url(&footer_icon));
+                let embed = getembed("Zárolt mém", "Ez a mém zárolva van. Ez leggyakrabban amiatt van, mert nem te vagy az első aki beküldte. 
+                Amennyiben a mém nem egy repost, a feltöltési értesítő alatt feloldhatod a zárolását.");
                 let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
                 message_component.create_response(&ctx.http, reply).await.unwrap();
                 info!("{} megpróbált egy zárolt mémet tagelni ({})", user_id, &filename);
@@ -99,11 +83,7 @@ impl EventHandler for AdvancedHandler {
                     Most a gyorscimkézés második szakasza következik, így \
                     a következő üzeneted összes vesszővel elválasztott része regisztrálva lesz mint cimke!", &filename, &droptag);
         
-                    let embed = CreateEmbed::new().color(color)
-                         .title("Formátum beállítva")
-                         .description(&description)
-                         .footer(CreateEmbedFooter::new(&footer_text)
-                         .icon_url(&footer_icon));
+                    let embed = getembed("Formátum beállítva", &description);
 
                     let reply = CreateInteractionResponse::Message(CreateInteractionResponseMessage::new().embed(embed));
                     message_component.create_response(&ctx.http, reply).await.unwrap();

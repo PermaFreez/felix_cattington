@@ -1,12 +1,12 @@
 use std::env;
 
-use poise::{CreateReply, serenity_prelude::{CreateEmbed, CreateEmbedFooter, Color, CreateButton, ButtonStyle, CreateActionRow}};
+use poise::{CreateReply, serenity_prelude::{CreateButton, ButtonStyle, CreateActionRow}};
 use log::info;
 
 use rand::prelude::*;
 use rusqlite::Connection;
 
-use crate::{Data, TAG_SEPARATOR};
+use crate::{Data, TAG_SEPARATOR, response::getembed};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -14,79 +14,6 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 #[poise::command(slash_command, dm_only)]
 pub async fn search_all(ctx: Context<'_>,
     #[description = "Kereső tagek"] tagek: String) -> Result<(), Error> {
-        let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
-        let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
-
-        let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-            .expect("Color is to be defined in hex!"));
-
-            let db = env::var("DATABASE").unwrap();
-            let conn = Connection::open(db).unwrap();
-
-        let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
-        let mut is_banned = false;
-        {
-            let mut ban_stmt = conn.prepare(ban_query).unwrap();
-
-            for row in ban_stmt.query_map(&[("?1", &ctx.author().id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
-                let row: u32 = row.unwrap();
-                if row == 1 {
-                    is_banned = true;
-                }
-            }
-        }
-
-        if is_banned {
-            let embed = CreateEmbed::new().color(color)
-            .title("Kitiltás")
-            .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
-            .footer(CreateEmbedFooter::new(&footer_text)
-            .icon_url(&footer_icon));
-            let reply = CreateReply::new().embed(embed);
-            ctx.send(reply).await.unwrap();
-            info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
-
-            return Ok(());
-        }
-
-        let meme_links = search(&tagek.to_lowercase(), false);
-
-        let mut embed = CreateEmbed::new();
-        if meme_links.is_empty() {
-            embed = embed
-                .title("Nincs ilyen mém.")
-                .description("A rendszer nem talált a kritériumoknak megfelelő mémet.")
-                .color(color)
-                .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
-        } else {
-            let description = format!("Itt vannak a leírásnak megfelelő mémek: {}", meme_links);
-            embed = embed
-                .title("Mém megtalálva:")
-                .description(description)
-                .color(color)
-                .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
-        }
-        
-        let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
-
-        let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
-
-        ctx.send(reply).await.unwrap();
-        
-        info!("{} rákeresett az összes ilyen mémre: {}", ctx.author().name, &tagek);
-
-        Ok(())
-}
-
-/// Kiad egy random mémet az adott tag(ekk)el
-#[poise::command(slash_command)]
-pub async fn search_random(ctx: Context<'_>,
-    #[description = "Kereső tagek"] tagek: String) -> Result<(), Error> {
-        let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
-        let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
-
-        let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-            .expect("Color is to be defined in hex!"));
 
         let db = env::var("DATABASE").unwrap();
         let conn = Connection::open(db).unwrap();
@@ -105,11 +32,59 @@ pub async fn search_random(ctx: Context<'_>,
         }
 
         if is_banned {
-            let embed = CreateEmbed::new().color(color)
-            .title("Kitiltás")
-            .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
-            .footer(CreateEmbedFooter::new(&footer_text)
-            .icon_url(&footer_icon));
+            let embed = getembed("Kitiltás",
+            "Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.");
+            let reply = CreateReply::new().embed(embed);
+            ctx.send(reply).await.unwrap();
+            info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
+
+            return Ok(());
+        }
+
+        let meme_links = search(&tagek.to_lowercase(), false);
+
+
+        let description = format!("Itt vannak a leírásnak megfelelő mémek: {}", meme_links);
+        let mut embed = getembed("Mém megtalálva:", description);
+        if meme_links.is_empty() {
+            embed = getembed("Nincs ilyen mém.", "A rendszer nem talált a kritériumoknak megfelelő mémet.");
+        }
+        
+        let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
+
+        let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
+
+        ctx.send(reply).await.unwrap();
+        
+        info!("{} rákeresett az összes ilyen mémre: {}", ctx.author().name, &tagek);
+
+        Ok(())
+}
+
+/// Kiad egy random mémet az adott tag(ekk)el
+#[poise::command(slash_command)]
+pub async fn search_random(ctx: Context<'_>,
+    #[description = "Kereső tagek"] tagek: String) -> Result<(), Error> {
+
+        let db = env::var("DATABASE").unwrap();
+        let conn = Connection::open(db).unwrap();
+
+        let ban_query = "SELECT Count(*) FROM banned WHERE UserId = ?1;";
+        let mut is_banned = false;
+        {
+            let mut ban_stmt = conn.prepare(ban_query).unwrap();
+
+            for row in ban_stmt.query_map(&[("?1", &ctx.author().id.to_string())], |row| Ok(row.get(0).unwrap())).unwrap() {
+                let row: u32 = row.unwrap();
+                if row == 1 {
+                    is_banned = true;
+                }
+            }
+        }
+
+        if is_banned {
+            let embed = getembed("Kitiltás",
+            "Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.");
             let reply = CreateReply::new().embed(embed);
             ctx.send(reply).await.unwrap();
             info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
@@ -119,20 +94,10 @@ pub async fn search_random(ctx: Context<'_>,
 
         let random_meme = search(&tagek.to_lowercase(), true);
 
-        let mut embed = CreateEmbed::new();
+        let description = format!("Itt van egy a leírásnak megfelelő mém: {}", random_meme);
+        let mut embed = getembed("Mém megtalálva:", description);
         if random_meme.is_empty() {
-            embed = embed
-                .title("Nincs ilyen mém.")
-                .description("A rendszer nem talált a kritériumoknak megfelelő mémet.")
-                .color(color)
-                .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
-        } else {
-            let description = format!("Itt van egy a leírásnak megfelelő mém: {}", random_meme);
-            embed = embed
-                .title("Mém megtalálva:")
-                .description(description)
-                .color(color)
-                .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
+            embed = getembed("Nincs ilyen mém.", "A rendszer nem talált a kritériumoknak megfelelő mémet.");
         }
         
         let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);

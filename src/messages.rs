@@ -2,11 +2,13 @@ use std::{env, fs};
 use log::info;
 
 use poise::serenity_prelude::{async_trait, EventHandler, Context, Message,
-    Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateMessage
+    CreateButton, ButtonStyle, CreateMessage
 };
 
 use std::process::Command;
 use rusqlite::Connection;
+
+use crate::response::getembed;
 
 use crate::{turnoff, schedule, introduce};
 pub struct InformerHandler;
@@ -25,12 +27,6 @@ impl EventHandler for InformerHandler {
         }
 
         for attachment in &msg.attachments {
-
-            let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find FOOTER environment variable!");
-            let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find FOOTER_ICON environment variable!");
-
-            let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-                .expect("Color is to be defined in hex!"));
 
             let db = env::var("DATABASE").unwrap();
             let conn = Connection::open(db).unwrap();
@@ -113,10 +109,7 @@ impl EventHandler for InformerHandler {
                         **Amennyiben ezek a mémek NEM egyeznek használd a Fals-pozitív gombot. \
                         A gombbal való visszaélés büntetést von maga után!**", &link);
 
-                        let mut embed = CreateEmbed::new().color(color)
-                            .title("Repost észlelve")
-                            .description(repost_description)
-                            .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
+                        let mut embed = getembed("Repost észlelve", &repost_description);
 
                         if att_type.matches("video").count() == 1 {
                             embed = embed.thumbnail("https://cdn.discordapp.com/attachments/873153317939867708/1099754267167961088/iu.png");
@@ -155,10 +148,7 @@ impl EventHandler for InformerHandler {
             let description = format!("Úgy tűnik beküldtél egy mémet az Ideológiák Tárháza Discord szerverére. \
             Amennyiben fel szeretnéd venni az IT mém-könyvtárába, használd a `/tag `**`{}`**` <tagek vesszővel elválasztva>` parancsot!", &file);
 
-            let mut embed = CreateEmbed::new().color(color)
-                .title("Mém észlelve")
-                .description(description)
-                .footer(CreateEmbedFooter::new(&footer_text).icon_url(&footer_icon));
+            let mut embed = getembed("Mém észlelve", &description);
 
             if att_type.matches("video").count() == 1 {
                 embed = embed.thumbnail("https://cdn.discordapp.com/attachments/873153317939867708/1099754267167961088/iu.png");

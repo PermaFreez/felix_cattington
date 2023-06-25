@@ -1,9 +1,11 @@
 use std::env;
 use log::info;
 
-use poise::{CreateReply, serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow}};
+use poise::{CreateReply, serenity_prelude::{CreateButton, ButtonStyle, CreateActionRow}};
 
 use rusqlite::Connection;
+
+use crate::response::getembed;
 
 use crate::Data;
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -12,12 +14,6 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 /// Kiadja a 10 leghasználtabb cimkét
 #[poise::command(slash_command, dm_only)]
 pub async fn mosttaged(ctx: Context<'_>) -> Result<(), Error> {
-
-    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-
-    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-        .expect("Color is to be defined in hex!"));
 
     let tags = most_used_tags(10);
 
@@ -32,11 +28,7 @@ pub async fn mosttaged(ctx: Context<'_>) -> Result<(), Error> {
 
     let description = format!("A tíz leghasználtabb cimke a következő (ennyiszer): \n**{}**.", &answer);
 
-    let embed = CreateEmbed::new().color(color)
-        .title("Top Cimkék")
-        .description(&description)
-        .footer(CreateEmbedFooter::new(footer_text)
-        .icon_url(footer_icon));
+    let embed = getembed("Top Cimkék", &description);
 
     let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
     let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
@@ -51,12 +43,6 @@ pub async fn mosttaged(ctx: Context<'_>) -> Result<(), Error> {
 /// Kiadja az összes eddig használt cimkét
 #[poise::command(slash_command, dm_only)]
 pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
-
-    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-
-    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-        .expect("Color is to be defined in hex!"));
 
     let tags = most_used_tags(0);
 
@@ -82,11 +68,7 @@ pub async fn alltagged(ctx: Context<'_>) -> Result<(), Error> {
         cimkek.push(format!("```\n{}\n```", &answer));
     }
 
-    let embed = CreateEmbed::new().color(color)
-        .title("Cimkék")
-        .description(&description)
-        .footer(CreateEmbedFooter::new(footer_text)
-        .icon_url(footer_icon));
+    let embed = getembed("Cimkék", &description);
 
     let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
     let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];

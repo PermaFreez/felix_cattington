@@ -3,13 +3,13 @@ use log::info;
 
 use poise::{
     CreateReply,
-    serenity_prelude::{UserId, Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle,
+    serenity_prelude::{UserId, CreateButton, ButtonStyle,
         CreateActionRow, Context as Context2, CacheHttp, ChannelId, MessageId}
 };
 
 use rusqlite::Connection;
 
-use crate::{Data, TAG_SEPARATOR};
+use crate::{Data, TAG_SEPARATOR, response::getembed};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -19,21 +19,12 @@ pub async fn tag(ctx: Context<'_>,
     #[description = "Az adott mém fájlneve (feltöltési értesítőben)"] meme: String,
     #[description = "Tagek (Szóközzel elválasztva)"] tagek: String) -> Result<(), Error> {
 
-    let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-    let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-
-    let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-        .expect("Color is to be defined in hex!"));
 
     match tag_fn(Some(ctx.clone()), None, &ctx.author().id, &meme, &tagek).await {
         TagResult::Success => {
             let description = format!("Sikeresen beállítottad a következő tageket a *{}* fájlra: **\"{}\"**.", &meme ,&tagek);
 
-            let embed = CreateEmbed::new().color(color)
-             .title("Tagek elmentve")
-             .description(&description)
-             .footer(CreateEmbedFooter::new(footer_text)
-             .icon_url(footer_icon));
+            let embed = getembed("Tagek elmentve", description);
         
             let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
             let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
@@ -45,11 +36,8 @@ pub async fn tag(ctx: Context<'_>,
             Ok(())
         }
         TagResult::Banned => {
-            let embed = CreateEmbed::new().color(color)
-             .title("Kitiltás")
-             .description("Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.")
-             .footer(CreateEmbedFooter::new(&footer_text)
-             .icon_url(&footer_icon));
+            let embed = getembed("Kitiltás",
+            "Le vagy tiltva a bot használatáról, amennyiben kérdéseid vannak írj <@418109786622787604>-nak.");
             let reply = CreateReply::new().embed(embed);
             ctx.send(reply).await.unwrap();
             info!("{} tiltva van, de megpróbált írni a botnak!", ctx.author().id);
@@ -57,11 +45,7 @@ pub async fn tag(ctx: Context<'_>,
         }
         TagResult::BannedTag(tag) => {
             let description = format!("A tag-eid között a {}. tiltva van, így a tagek nem frissültek!", tag.1);
-            let embed = CreateEmbed::new().color(color)
-             .title("Tiltott tag")
-             .description(description)
-             .footer(CreateEmbedFooter::new(&footer_text)
-             .icon_url(&footer_icon));
+            let embed = getembed("Tiltott tag", description);
             let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
             let reply = CreateReply::new().embed(embed).components(vec![CreateActionRow::Buttons(vec![button])]);
             ctx.send(reply).await.unwrap();
@@ -69,23 +53,16 @@ pub async fn tag(ctx: Context<'_>,
             return Ok(());
         }
         TagResult::Locked => {
-            let embed = CreateEmbed::new().color(color)
-             .title("Zárolt mém")
-             .description("Ez a mém zárolva van. Ez leggyakrabban amiatt van, mert nem te vagy az első aki beküldte. 
-                Amennyiben a mém nem egy repost, a feltöltési értesítő alatt feloldhatod a zárolását.")
-             .footer(CreateEmbedFooter::new(footer_text)
-             .icon_url(footer_icon));
+            let embed = getembed("Zárolt mém",
+            "Ez a mém zárolva van. Ez leggyakrabban amiatt van, mert nem te vagy az első aki beküldte. 
+            Amennyiben a mém nem egy repost, a feltöltési értesítő alatt feloldhatod a zárolását.");
             let reply = CreateReply::new().embed(embed);
             ctx.send(reply).await.unwrap();
             info!("{} megpróbált egy zárolt mémet tagelni ({})", ctx.author().id, &meme);
             return Ok(());
         }
         TagResult::NotOwned => {
-            let embed = CreateEmbed::new().color(color)
-             .title("Hiba")
-             .description("Ezt a mémet nem te küldted, vagy nem létezik!")
-             .footer(CreateEmbedFooter::new(footer_text)
-             .icon_url(footer_icon));
+            let embed = getembed("Hiba", "Ezt a mémet nem te küldted, vagy nem létezik!");
             let reply = CreateReply::new().embed(embed);
             ctx.send(reply).await.unwrap();
             info!("{} megpróbált egy nem létező/nem saját mémet tagelni ({})", ctx.author().id, &meme);
@@ -103,7 +80,6 @@ pub enum TagResult {
 }
 
 pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &UserId, filename: &String, tags: &String) -> TagResult {
-    println!("tagek: {}", tags);
     let db = env::var("DATABASE").unwrap();
     let conn = Connection::open(db).unwrap();
 
@@ -115,7 +91,7 @@ pub async fn tag_fn(ctx1: Option<Context<'_>>, ctx2: Option<Context2>, user: &Us
 
     let tag_split: Vec<&str> = tagek_lower.split(TAG_SEPARATOR).collect::<Vec<&str>>();
 
-    let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find BANNED_TAGS environment variable!");
+    let banned_tags = env::var("BANNED_TAGS").expect("Couldn't find environment variable!");
     let banned_tags_vec: Vec<&str> = banned_tags.split(' ').collect();
 
     for i in 0..banned_tags_vec.len() {

@@ -1,10 +1,9 @@
 mod helprender;
 use helprender::*;
 
-use std::env;
 use log::info;
 
-use poise::{CreateReply, serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter, CreateButton, ButtonStyle, CreateActionRow}};
+use poise::{CreateReply, serenity_prelude::{CreateButton, ButtonStyle, CreateActionRow}};
 
 use crate::Data;
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -28,19 +27,8 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
 
         let description = help.render();
 
-        let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-        let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-
-        let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-            .expect("Color is to be defined in hex!"));
-
-
-        let embed = CreateEmbed::new().color(color)
-         .title("Súgó")
-         .description(description)
-         .footer(CreateEmbedFooter::new(footer_text)
-         .icon_url(footer_icon));
-
+        let embed = crate::response::getembed("Súgó", &description);
+        
         let button = CreateButton::new("leiratkozas").label("Leiratkozás").style(ButtonStyle::Danger);
         let components: Vec<CreateActionRow> = vec![CreateActionRow::Buttons(vec![button])];
         let reply = CreateReply::new().embed(embed).components(components);

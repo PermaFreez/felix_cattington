@@ -2,15 +2,12 @@
 
 use std::env;
 
-use poise::{
-    CreateReply,
-    serenity_prelude::{Color, CreateEmbed, CreateEmbedFooter}
-};
+use poise::CreateReply;
 
 use log::info;
 use rusqlite::Connection;
 
-use crate::Data;
+use crate::{Data, response::getembed};
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -19,21 +16,10 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 pub async fn gettags(ctx: Context<'_>,
     #[description = "A mém fájneve (feltöltési értesítőből)"] meme: String) -> Result<(), Error> {
 
-        let footer_text = env::var("FOOTER_TEXT").expect("Couldn't find AUTHOR environment variable!");
-        let footer_icon = env::var("FOOTER_ICON").expect("Couldn't find AUTHOR environment variable!");
-    
-        let color: Color = Color::new(u32::from_str_radix(env::var("COLOR").expect("Couldn't find environment variable!").as_str(), 16)
-            .expect("Color is to be defined in hex!"));
-
         let db = env::var("DATABASE").unwrap();
         let conn = Connection::open(db).unwrap();
 
-        let embed = CreateEmbed::new()
-        .title("Nem található")
-        .description("Nem található mém a megadott fájlnévvel.")
-        .footer(CreateEmbedFooter::new(&footer_text)
-        .icon_url(&footer_icon))
-        .color(color);
+        let embed = getembed("Nem található", "Nem található mém a megadott fájlnévvel.");
 
         let mut reply = CreateReply::new().embed(embed);
         {
@@ -42,12 +28,8 @@ pub async fn gettags(ctx: Context<'_>,
             for row in stmt.query_map(&[("?1", &meme)], |row| Ok(row.get(0).unwrap())).unwrap() {
                 let tags: String = row.unwrap();
 
-                let embed = CreateEmbed::new()
-                .title("Tagek:")
-                .description(format!("**A megadott mém az alábbi cimkékkel rendelkezik:** ```{}```", tags))
-                .footer(CreateEmbedFooter::new(&footer_text)
-                .icon_url(&footer_icon))
-                .color(color);
+                let embed = getembed("Tagek:",
+                format!("**A megadott mém az alábbi cimkékkel rendelkezik:** ```{}```", tags));
 
                 reply = CreateReply::new().embed(embed);
             }

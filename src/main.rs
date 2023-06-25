@@ -15,6 +15,7 @@ mod mosttaged;
 mod should_tag;
 mod introduce;
 mod tagop;
+mod response;
 
 use std::{env, collections::HashSet};
 use dotenv::dotenv;
@@ -54,7 +55,8 @@ async fn main() {
                 mosttaged::mosttaged(),
                 mosttaged::alltagged(),
                 should_tag::cimkezendo(),
-                tagop::gettags()],
+                tagop::gettags(),
+                quicktag::templates::formatumok()],
             owners: owners,
             ..Default::default()
         })
@@ -94,7 +96,7 @@ async fn create_db() {
         "CREATE TABLE IF NOT EXISTS quicktag(UserId varchar(255) PRIMARY KEY, FileName varchar(255));",
         "CREATE TABLE IF NOT EXISTS upforgrabs(FileName varchar(255) PRIMARY KEY, AnnounceMessage varchar(255));",
         "CREATE TABLE IF NOT EXISTS introduced(UserId varchar(255) PRIMARY KEY);",
-        "CREATE TABLE IF NOT EXISTS templates(Name varchar(255) PRIMARY KEY);",
+        "CREATE TABLE IF NOT EXISTS templates(Name varchar(255) PRIMARY KEY, Example varchar(255));",
     ];
 
     let db = env::var("DATABASE").unwrap();
