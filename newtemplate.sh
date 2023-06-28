@@ -1,0 +1,1 @@
+sqlite3 database.db "INSERT INTO templates(Name, Example) VALUES ('"$1"', '"$2"');"

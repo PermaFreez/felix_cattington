@@ -29,7 +29,7 @@ pub async fn formatumok(ctx: Context2<'_>) -> Result<(), Error> {
             }
         }
     }
-    let embed = getembed("Valami", description);
+    let embed = getembed("Formátumok", format!("Ezek a jelenleg regisztrált mémformátumok:\n{}", description));
 
     let reply = CreateReply::new().embed(embed);
 

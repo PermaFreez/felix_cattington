@@ -18,12 +18,15 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
                 Some("Pl. /tag valamivalami-42.png cica, macska, szisza"), "Ez rá fogja tenni a valamivalami-42.png mémre a \"cica\" \"macska\" és \"szisza\" cimkét."))
             .add(Command::new("/seach_all", Some(vec!["cimkék"]),
                 Some("Pl. /search_all szisza"), "Ez ki fogja adni a valamivalami-42.png-t és minden más \"sziszával\" felcimkézett mémet."))
-            .add(Command::new("/search_random", Some(vec!["cimkék"]), Some("Pl. /search_random \"cica\""), "Ez ki fogja adni a valamivalami-42.png-t, vagy egy másik mémet, amit \"cicával\" cimkéztek fel."))
+            .add(Command::new("/search_random", Some(vec!["cimkék"]), Some("Pl. /search_random \"cica\""), "Ez ki fogja adni a valamivalami-42.png-t,\
+             vagy egy másik mémet, amit \"cicával\" cimkéztek fel."))
             .add(Command::new("/cimkezendo", None, None,
                 "Ez a parancs elküld neked egy olyan mémet, amit a tulajdonosa nem cimkézett fel. Ezt a mémet te is fel tudod cimkézni."))
             .add(Command::new("/mosttagged", None, None, "Ez a parancs kiadja a 10 leggyakrabban használt cimkét."))
             .add(Command::new("/alltagged", None, None, "Ez a parancs kiadja az összes eddig használt cimkét."))
-            .add(Command::new("/gettags", Some(vec!["fájlnév"]), None, "Ez a parancs kiadja az adott mémhez tartozó összes cimkét."));
+            .add(Command::new("/gettags", Some(vec!["fájlnév"]), None, "Ez a parancs kiadja az adott mémhez tartozó összes cimkét."))
+            .add(Command::new("/formatumok", None, None, "Ez a parancs kiadja az összes eddig regisztrált mémformátumot. Ezek gyorscimkézésnél \
+            használhatóak."));
 
         let description = help.render();
 
